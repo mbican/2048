@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "2048", "2048\2048.csproj", "{149F8F7A-EF5D-4F5D-B294-0BE074B23D0B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "2048Test", "2048\2048Test\2048Test.csproj", "{E541F1AF-E5D5-45C6-B389-76D90B9C695D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{149F8F7A-EF5D-4F5D-B294-0BE074B23D0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{149F8F7A-EF5D-4F5D-B294-0BE074B23D0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{149F8F7A-EF5D-4F5D-B294-0BE074B23D0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E541F1AF-E5D5-45C6-B389-76D90B9C695D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E541F1AF-E5D5-45C6-B389-76D90B9C695D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E541F1AF-E5D5-45C6-B389-76D90B9C695D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E541F1AF-E5D5-45C6-B389-76D90B9C695D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
