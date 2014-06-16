@@ -19,7 +19,7 @@ namespace _2048
 				return this._rowCount;
 			}
 		}
-		private readonly int _rowCount;
+		private int _rowCount;
 
 
 		public int ColumnCount
@@ -29,7 +29,7 @@ namespace _2048
 				return this._columnCount;
 			}
 		}
-		private readonly int _columnCount;
+		private int _columnCount;
 
 
 		private readonly List<T> data = new List<T>();
@@ -51,20 +51,8 @@ namespace _2048
 
 		public Matrix(int rowCount, int columnCount, T initValue)
 		{
-			if (rowCount < 0)
-			{
-				throw new ArgumentOutOfRangeException("rowCount", "rowCount < 0");
-			}
-			if (columnCount < 0)
-			{
-				throw new ArgumentOutOfRangeException("columnCount", "columnCount < 0");
-			}
-
-
-			this._rowCount = rowCount;
-			this._columnCount = columnCount;
-
-
+			this.processSize(rowCount, columnCount);
+			
 			var elemCount = this.RowCount * this.ColumnCount;
 			this.data.Capacity = elemCount;
 			for (var index = 0; index < elemCount; ++index)
@@ -77,22 +65,16 @@ namespace _2048
 
 		public Matrix(IMatrix<T> matrix)
 		{
-			if (matrix.RowCount < 0)
+			if (matrix == null)
 			{
-				throw new ArgumentException("matrix.RowCount < 0","matrix");
+				throw new ArgumentNullException("matrix");
 			}
-			if (matrix.ColumnCount < 0)
-			{
-				throw new ArgumentException("matrix.ColumnCount < 0","matrix");
-			}
-
-
-			this._rowCount = matrix.RowCount;
-			this._columnCount = matrix.ColumnCount;
+			this.processSize(matrix.RowCount, matrix.ColumnCount);
 
 
 			var elemCount = this._rowCount * this._columnCount;
-			for (var rowIndex = 0; rowIndex < elemCount; rowIndex += this._columnCount)
+			this.data.Capacity = elemCount;
+			for (var rowIndex = 0; rowIndex < this._rowCount; rowIndex++)
 			{
 				for (var colIndex = 0; colIndex < this._columnCount; colIndex++)
 				{
@@ -122,6 +104,27 @@ namespace _2048
 
 			return rowIndex * this.ColumnCount + columnIndex;
 
+		}
+
+
+		private void processSize(int rowCount, int columnCount)
+		{
+			if (rowCount < 0)
+			{
+				throw new ArgumentOutOfRangeException("rowCount", "rowCount < 0");
+			}
+			if (columnCount < 0)
+			{
+				throw new ArgumentOutOfRangeException("columnCount", "columnCount < 0");
+			}
+			if (rowCount == 0 || columnCount == 0)
+			{
+				rowCount = 0;
+				columnCount = 0;
+			}
+
+			this._rowCount = rowCount;
+			this._columnCount = columnCount;
 		}
 
 	}
