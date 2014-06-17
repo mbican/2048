@@ -12,17 +12,30 @@ namespace _2048
 	{
 		public static string ToDebugString(this IMatrix<bool> matrix)
 		{
-			var result=new StringBuilder();
-			for (var row = 0; row < matrix.RowCount; ++row)
+			var result = new StringBuilder();
+			foreach (var row in matrix.Rows())
 			{
-				for (var column = 0; column < matrix.ColumnCount; ++column)
+				foreach (var elem in row)
 				{
-					if ( matrix[row,column])
-					{
+					if (elem.Value)
 						result.Append("#");
-					}else{
+					else
 						result.Append(" ");
-					}
+				}
+				result.AppendLine();
+			}
+			return result.ToString();
+		}
+
+
+		public static string ToDebugString<T>(this IMatrix<T> matrix, int colSize = 8)
+		{
+			var result = new StringBuilder();
+			foreach (var row in matrix.Rows())
+			{
+				foreach (var elem in row)
+				{
+					result.AppendFormat(String.Format("{{0,{0}{1}", colSize, "}"), elem.Value);
 				}
 				result.AppendLine();
 			}
@@ -36,9 +49,15 @@ namespace _2048
 		}
 		
 
-		public static Matrix<T> ToMatrix<T>(this IMatrix<T> matrix)
+		public static Matrix<T> ToMatrix<T>(this IMatrix<T> matrix, bool readOnly = false)
 		{
-			return new Matrix<T>(matrix);
+			return new Matrix<T>(matrix, readOnly);
+		}
+
+
+		public static IMatrix<T> AsReadOnly<T>(this IMatrix<T> matrix)
+		{
+			return new ReadOnlyMatrix<T>(matrix);
 		}
 
 
@@ -48,24 +67,26 @@ namespace _2048
 			if (matrix2 == null) throw new ArgumentNullException("matrix2");
 			return matrix1.RowCount == matrix2.RowCount &&
 				matrix1.ColumnCount == matrix2.ColumnCount &&
-				matrix1.TraverseByRows().SequenceEqual(matrix2.TraverseByRows());
+				matrix1.TraverseByRows().Values().SequenceEqual(
+					matrix2.TraverseByRows().Values()
+				);
 		}
 
 
-		public static IEnumerable<T> TraverseByRows<T>(this IMatrix<T> matrix)
+		public static IEnumerable<Element<T>> TraverseByRows<T>(this IMatrix<T> matrix)
 		{
 			if( matrix == null ) throw new ArgumentNullException("matrix");
 			for (var rowIndex = 0; rowIndex < matrix.RowCount; rowIndex++)
 			{
 				for (var columnIndex = 0; columnIndex < matrix.ColumnCount; columnIndex++)
 				{
-					yield return matrix[rowIndex, columnIndex];
+					yield return new Element<T>(matrix, rowIndex, columnIndex);
 				}
 			}
 		}
 
 
-		public static IEnumerable<T> Row<T>(this IMatrix<T> matrix, int rowIndex)
+		public static IEnumerable<Element<T>> Row<T>(this IMatrix<T> matrix, int rowIndex)
 		{
 			if (matrix == null) throw new ArgumentNullException("matrix");
 			if (rowIndex < 0 || matrix.RowCount <= rowIndex)
@@ -73,12 +94,12 @@ namespace _2048
 
 			for (var columnIndex = 0; columnIndex < matrix.ColumnCount; columnIndex++)
 			{
-				yield return matrix[rowIndex, columnIndex];
+				yield return new Element<T>(matrix, rowIndex, columnIndex);
 			}
 		}
 
 
-		public static IEnumerable<IEnumerable<T>> Rows<T>(this IMatrix<T> matrix)
+		public static IEnumerable<IEnumerable<Element<T>>> Rows<T>(this IMatrix<T> matrix)
 		{
 			if (matrix == null) throw new ArgumentNullException("matrix");
 			for (var rowIndex = 0; rowIndex < matrix.RowCount; rowIndex++)
@@ -88,7 +109,7 @@ namespace _2048
 		}
 
 
-		public static IEnumerable<T> Column<T>(this IMatrix<T> matrix, int columnIndex)
+		public static IEnumerable<Element<T>> Column<T>(this IMatrix<T> matrix, int columnIndex)
 		{
 			if (matrix == null) throw new ArgumentNullException("matrix");
 			if (columnIndex < 0 || matrix.ColumnCount <= columnIndex)
@@ -96,12 +117,12 @@ namespace _2048
 
 			for (var rowIndex = 0; rowIndex < matrix.ColumnCount; rowIndex++)
 			{
-				yield return matrix[rowIndex, columnIndex];
+				yield return new Element<T>(matrix, rowIndex, columnIndex);
 			}
 		}
 
 
-		public static IEnumerable<IEnumerable<T>> Columns<T>(this IMatrix<T> matrix)
+		public static IEnumerable<IEnumerable<Element<T>>> Columns<T>(this IMatrix<T> matrix)
 		{
 			if (matrix == null) throw new ArgumentNullException("matrix");
 			for (var columnIndex = 0; columnIndex < matrix.ColumnCount; columnIndex++)

@@ -5,51 +5,43 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 
+#if DEBUG
 [assembly: InternalsVisibleTo("2048Test")]
+#endif
 
 namespace _2048.Matrix
 {
 	class Matrix<T>: IMatrix<T>
 	{
 
-		public int RowCount
-		{
-			get
-			{
-				return this._rowCount;
-			}
-		}
-		private int _rowCount;
-
-
-		public int ColumnCount
-		{
-			get
-			{
-				return this._columnCount;
-			}
-		}
-		private int _columnCount;
-
-
 		private readonly List<T> data = new List<T>();
 
 
-		public T this[int rowIndex,int columnIndex]
+		public T this[int rowIndex, int columnIndex]
 		{
-			get
-			{
-				return this.data[this.GetIndex(rowIndex, columnIndex)];
-			}
-			set
-			{
-				this.data[this.GetIndex(rowIndex, columnIndex)] = value;
+			get { return this.data[this.GetIndex(rowIndex, columnIndex)]; }
+			set	{
+				if (this._readOnly) throw new NotSupportedException(
+					"Trying to set value into read-only matrix."
+				);
+				this.data[this.GetIndex(rowIndex, columnIndex)] = value; 
 			}
 		}
 
 
+		public int RowCount	{ get { return this._rowCount; } }
+		private int _rowCount;
 
-		public Matrix(int rowCount, int columnCount, T initValue)
+
+		public int ColumnCount { get {	return this._columnCount; } }
+		private int _columnCount;
+
+
+		public bool ReadOnly { get { return this._readOnly; } }
+		private bool _readOnly;
+
+
+		public Matrix(int rowCount, int columnCount, T initValue, bool readOnly = false)
 		{
 			this.processSize(rowCount, columnCount);
 			
@@ -59,11 +51,11 @@ namespace _2048.Matrix
 			{
 				data.Add(initValue);
 			}
-
+			this._readOnly = readOnly;
 		}
 
 
-		public Matrix(IMatrix<T> matrix)
+		public Matrix(IMatrix<T> matrix, bool readOnly = false)
 		{
 			if (matrix == null)
 			{
@@ -74,7 +66,14 @@ namespace _2048.Matrix
 
 			var elemCount = this._rowCount * this._columnCount;
 			this.data.Capacity = elemCount;
-			data.AddRange(matrix.TraverseByRows());
+			data.AddRange(from cell in matrix.TraverseByRows() select cell.Value);
+			this._readOnly = readOnly;
+		}
+
+
+		public void Freeze()
+		{
+			this._readOnly = true;
 		}
 
 
@@ -120,6 +119,7 @@ namespace _2048.Matrix
 			this._rowCount = rowCount;
 			this._columnCount = columnCount;
 		}
+
 
 	}
 }

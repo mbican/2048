@@ -145,6 +145,10 @@ namespace _2048Test
 			Assert.AreEqual(1, right[0, 0]);
 			Assert.AreEqual(2, right[1, 0]);
 
+			right[1, 0] = 3;
+			Assert.AreEqual(3, right[1, 0]);
+			Assert.AreEqual(3, m1[0, 1]);
+
 		}
 
 	}

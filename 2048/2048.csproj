@@ -63,7 +63,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Extensions\EElement.cs" />
     <Compile Include="Extensions\EMatrix.cs" />
+    <Compile Include="Matrix\Element.cs" />
     <Compile Include="Matrix\IMatrix.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -76,6 +78,7 @@
     <Compile Include="Matrix\MatrixRotator.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Matrix\ReadOnlyMatrix.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -8,18 +8,9 @@ namespace _2048.Matrix
 {
 	interface IMatrix<T>
 	{
-		int RowCount
-		{
-			get;
-		}
-		int ColumnCount
-		{
-			get;
-		}
-		T this[int rowIndex, int columnIndex]
-		{
-			get;
-			set;
-		}
+		T this[int rowIndex, int columnIndex] { get; set; }
+		int RowCount { get; }
+		int ColumnCount { get; }
+		bool ReadOnly { get; }
 	}
 }

@@ -20,8 +20,10 @@ namespace _2048.Matrix
 				];
 			}
 			set {
-				this.validateIndexes(rowIndex, columnIndex);
-				this.decorated[rowIndex, columnIndex] = value; 
+				this.decorated[
+					this.transformRowIndex(rowIndex, columnIndex), 
+					this.transformColumnIndex(rowIndex, columnIndex)
+				] = value; 
 			}
 		}
 
