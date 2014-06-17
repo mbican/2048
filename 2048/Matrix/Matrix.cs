@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("2048Test")]
 
-namespace _2048
+namespace _2048.Matrix
 {
 	class Matrix<T>: IMatrix<T>
 	{
@@ -74,13 +74,7 @@ namespace _2048
 
 			var elemCount = this._rowCount * this._columnCount;
 			this.data.Capacity = elemCount;
-			for (var rowIndex = 0; rowIndex < this._rowCount; rowIndex++)
-			{
-				for (var colIndex = 0; colIndex < this._columnCount; colIndex++)
-				{
-					data.Add(matrix[rowIndex,colIndex]);
-				}
-			}
+			data.AddRange(matrix.TraverseByRows());
 		}
 
 
@@ -93,7 +87,7 @@ namespace _2048
 					"rowIndex is out of range."
 				);
 			}
-			if (columnIndex < 0 || this.ColumnCount<=columnIndex)
+			if (columnIndex < 0 || this.ColumnCount <= columnIndex)
 			{
 				throw new ArgumentOutOfRangeException(
 					"columnIndex",
