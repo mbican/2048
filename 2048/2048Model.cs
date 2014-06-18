@@ -73,6 +73,7 @@ namespace _2048
 						bool sourceMoved = source.MoveNext();
 						do
 						{
+							// move source to non-empty tile.
 							while ((sourceMoved = source.MoveNext())
 								&& source.Current.Value == 0
 							) ;
@@ -86,21 +87,35 @@ namespace _2048
 									// move tile into empty space
 									if (destination.Current.Value == 0)
 									{
-										destination.Current.Value = source.Current.Value;
+										destination.Current.Value = 
+											source.Current.Value;
 										source.Current.Value = 0;
 										moved = true;
+										/*
+											even moved tile can be subsequently
+											merged so we need to move the source
+											enumerator to the next tile and 
+											repeat with the same destination 
+											to try to merge them.
+										 */
 										while ((sourceMoved = source.MoveNext())
 											&& source.Current.Value == 0
 										) ;
 										repeat = true;
 									}
 									// merge tiles with the same value
-									else if (destination.Current.Value == source.Current.Value)
+									else if (destination.Current.Value == 
+										source.Current.Value)
 									{
 										destination.Current.Value *= 2;
 										source.Current.Value = 0;
 										moved = true;
 									}
+									/*
+									 * if there is a gap between source and
+									 * destination we can try to move destination
+									 * closer to source and repeat.
+									 */
 									else if (
 									   destination.Current.ColumnIndex <
 									   source.Current.ColumnIndex - 1
