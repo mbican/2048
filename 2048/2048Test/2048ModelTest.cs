@@ -243,5 +243,65 @@ namespace _2048Test
 			Assert.AreEqual(32, model.Matrix[3, 3]);
 			var a = "ahoj";
 		}
+
+	
+		[TestMethod]
+		public void _2048ModelCloneTest()
+		{
+			var model = new _2048Model(0);
+			var model2 = new _2048Model(model);
+			Assert.AreNotSame(model, model2);
+			Assert.IsTrue(model.Matrix.MatrixEqual(model2.Matrix));
+			Trace.WriteLine("1:");
+			Trace.Write(model.Matrix.ToDebugString(4));
+			Trace.WriteLine("");
+			Trace.Write(model2.Matrix.ToDebugString(4));
+			Assert.AreEqual(2, model.Matrix[2, 3]);
+			Assert.AreEqual(2, model.Matrix[3, 0]);
+			Assert.IsTrue(model.MoveDown());
+			model2.MoveDown();
+			Assert.IsTrue(model.Matrix.MatrixEqual(model2.Matrix));
+			Trace.WriteLine("2:");
+			Trace.Write(model.Matrix.ToDebugString(4));
+			Trace.WriteLine("");
+			Trace.Write(model2.Matrix.ToDebugString(4));
+			Assert.AreEqual(2, model.Matrix[0, 2]);
+			Assert.AreEqual(2, model.Matrix[3, 0]);
+			Assert.AreEqual(2, model.Matrix[3, 3]);
+			Assert.IsTrue(model.MoveDown());
+			model2.MoveDown();
+			Assert.IsTrue(model.Matrix.MatrixEqual(model2.Matrix));
+			Trace.WriteLine("3:");
+			Trace.Write(model.Matrix.ToDebugString(4));
+			Trace.WriteLine("");
+			Trace.Write(model2.Matrix.ToDebugString(4));
+			Assert.AreEqual(2, model.Matrix[2, 3]);
+			Assert.AreEqual(2, model.Matrix[3, 0]);
+			Assert.AreEqual(2, model.Matrix[3, 2]);
+			Assert.AreEqual(2, model.Matrix[3, 3]);
+			Assert.IsTrue(model.MoveDown());
+			model2.MoveDown();
+			Assert.IsTrue(model.Matrix.MatrixEqual(model2.Matrix));
+			Trace.WriteLine("4:");
+			Trace.Write(model.Matrix.ToDebugString(4));
+			Trace.WriteLine("");
+			Trace.Write(model2.Matrix.ToDebugString(4));
+			Assert.AreEqual(2, model.Matrix[3, 0]);
+			Assert.AreEqual(2, model.Matrix[3, 1]);
+			Assert.AreEqual(2, model.Matrix[3, 2]);
+			Assert.AreEqual(4, model.Matrix[3, 3]);
+			Assert.IsFalse(model.MoveDown());
+			model2.MoveDown();
+			Assert.IsTrue(model.Matrix.MatrixEqual(model2.Matrix));
+			Trace.WriteLine("5:");
+			Trace.Write(model.Matrix.ToDebugString(4));
+			Trace.WriteLine("");
+			Trace.Write(model2.Matrix.ToDebugString(4));
+			Assert.AreEqual(2, model.Matrix[3, 0]);
+			Assert.AreEqual(2, model.Matrix[3, 1]);
+			Assert.AreEqual(2, model.Matrix[3, 2]);
+			Assert.AreEqual(4, model.Matrix[3, 3]);
+			var a = "ahoj";
+		}
 	}
 }

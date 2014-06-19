@@ -47,6 +47,12 @@ namespace _2048
 		{
 			return new MatrixRotator<T>(matrix, direction);
 		}
+
+
+		public static IMatrix<T> AsIMatrix<T>(this IMatrix<T> matrix)
+		{
+			return matrix;
+		}
 		
 
 		public static Matrix<T> ToMatrix<T>(this IMatrix<T> matrix, bool readOnly = false)

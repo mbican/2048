@@ -2,9 +2,9 @@
 {
 	enum _2048MoveDirection
 	{
-		left,
-		right,
-		up,
-		down,
+		left = 0,
+		right = 1,
+		up = 2,
+		down = 3,
 	}
 }

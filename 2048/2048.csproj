@@ -59,6 +59,8 @@
     </Page>
     <Compile Include="2048Model.cs" />
     <Compile Include="2048MoveDirection.cs" />
+    <Compile Include="AI\ANN\IANNGame.cs" />
+    <Compile Include="AI\MCTS\IMCTSGame.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>

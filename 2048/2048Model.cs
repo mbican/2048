@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 using _2048.Matrix;
 
 #if DEBUG
@@ -12,19 +14,27 @@ using _2048.Matrix;
 
 namespace _2048
 {
-	class _2048Model
+	class _2048Model : AI.MCTS.IMCTSGame
 	{
 		public readonly IMatrix<int> Matrix;
 
 
 		private const int size = 4;
 		private const int startTiles = 2;
-		private readonly Matrix<int> _matrix = new Matrix<int>(size, size, 0);
+		private readonly Matrix<int> _matrix;
 		private readonly Random random;
+
+
+		public int Score { get { return this._score; } }
+		private int _score = 0;
+
+
+		public int PossibleMoves { get { return 4; } }
 
 
 		public _2048Model(int? randomSeed = null)
 		{
+			this._matrix = new Matrix<int>(size, size, 0);
 			this.Matrix = this._matrix.AsReadOnly();
 
 			if (randomSeed.HasValue)
@@ -37,31 +47,46 @@ namespace _2048
 		}
 
 
+		public _2048Model(_2048Model model)
+		{
+			this._matrix = model._matrix.ToMatrix();
+			this.Matrix = this._matrix.AsReadOnly();
+			var formatter = new BinaryFormatter();
+			using (Stream stream = new MemoryStream())
+			{
+				formatter.Serialize(stream, model.random);
+				stream.Seek(0, SeekOrigin.Begin);
+				this.random = (Random) formatter.Deserialize(stream);
+			}
+			this._score = model._score;
+		}
+
+
 		public bool MoveLeft()
 		{
-			return this.Move(_2048MoveDirection.left);
+			return this.TryMove(_2048MoveDirection.left);
 		}
 
 
 		public bool MoveRight()
 		{
-			return this.Move(_2048MoveDirection.right);
+			return this.TryMove(_2048MoveDirection.right);
 		}
 
 
 		public bool MoveUp()
 		{
-			return this.Move(_2048MoveDirection.up);
+			return this.TryMove(_2048MoveDirection.up);
 		}
 
 
 		public bool MoveDown()
 		{
-			return this.Move(_2048MoveDirection.down);
+			return this.TryMove(_2048MoveDirection.down);
 		}
 
 
-		public bool Move(_2048MoveDirection move)
+		public bool TryMove(_2048MoveDirection move)
 		{
 			bool moved = false;
 			foreach (var row in this.GetNormalizedMatrix(move).Rows())
@@ -107,7 +132,7 @@ namespace _2048
 									else if (destination.Current.Value == 
 										source.Current.Value)
 									{
-										destination.Current.Value *= 2;
+										this._score += destination.Current.Value *= 2;
 										source.Current.Value = 0;
 										moved = true;
 									}
@@ -131,6 +156,20 @@ namespace _2048
 				}
 			}
 			return moved && this.TryAddTile();
+		}
+
+
+		public bool TryMove(int move)
+		{
+			if (move < 0 || this.PossibleMoves <= move)
+				throw new ArgumentOutOfRangeException("move");
+			return this.TryMove((_2048MoveDirection)move);
+		}
+
+
+		public AI.MCTS.IMCTSGame Clone()
+		{
+			return new _2048Model(this);
 		}
 
 
@@ -171,7 +210,7 @@ namespace _2048
 		}
 
 
-		int GetNewTileValue()
+		private int GetNewTileValue()
 		{
 			return this.random.Next(10) == 0 ? 4 : 2;
 		}
