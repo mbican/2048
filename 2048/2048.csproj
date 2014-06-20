@@ -61,10 +61,12 @@
     <Compile Include="2048MoveDirection.cs" />
     <Compile Include="AI\ANN\IANNGame.cs" />
     <Compile Include="AI\MCTS\IMCTSGame.cs" />
+    <Compile Include="AI\MCTS\MCTS.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Extensions\EMCTSGame.cs" />
     <Compile Include="Extensions\EElement.cs" />
     <Compile Include="Extensions\EMatrix.cs" />
     <Compile Include="Matrix\Element.cs" />

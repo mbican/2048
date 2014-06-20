@@ -23,13 +23,27 @@ namespace _2048
 		private const int startTiles = 2;
 		private readonly Matrix<int> _matrix;
 		private readonly Random random;
+		private List<Element<int>> emptyTiles;
 
 
 		public int Score { get { return this._score; } }
 		private int _score = 0;
 
 
-		public int PossibleMoves { get { return 4; } }
+		public int PossibleMoves { get { return this._possibleMoves; } }
+		private int _possibleMoves;
+
+
+		public bool PlayersATurn { get { return this.emptyTiles == null; } }
+
+
+		public bool IsAutoMovePossible 
+		{ 
+			get 
+			{ 
+				return this.emptyTiles != null && 0 < this.emptyTiles.Count;
+			} 
+		}
 
 
 		public _2048Model(int? randomSeed = null)
@@ -43,7 +57,10 @@ namespace _2048
 				random = new Random();
 
 			for (var counter = 0; counter < startTiles; counter++)
-				this.TryAddTile();
+			{
+				this.SetEmptyTiles();
+				this.TryAutoAddTile();
+			}
 		}
 
 
@@ -55,10 +72,14 @@ namespace _2048
 			using (Stream stream = new MemoryStream())
 			{
 				formatter.Serialize(stream, model.random);
-				stream.Seek(0, SeekOrigin.Begin);
+				stream.Position = 0;
 				this.random = (Random) formatter.Deserialize(stream);
 			}
 			this._score = model._score;
+			if (model.emptyTiles == null)
+				this.ResetEmptyTiles();
+			else
+				this.SetEmptyTiles();
 		}
 
 
@@ -86,8 +107,10 @@ namespace _2048
 		}
 
 
-		public bool TryMove(_2048MoveDirection move)
+		public bool TryMove(_2048MoveDirection move, bool autoAddTile = true)
 		{
+			if (this.emptyTiles != null)
+				throw new InvalidOperationException("Tile wasn't added after previous move!");
 			bool moved = false;
 			foreach (var row in this.GetNormalizedMatrix(move).Rows())
 			{
@@ -155,7 +178,13 @@ namespace _2048
 					}
 				}
 			}
-			return moved && this.TryAddTile();
+			if (moved)
+			{
+				this.SetEmptyTiles();
+				return !autoAddTile || this.TryAutoAddTile();
+			}
+			else
+				return false;
 		}
 
 
@@ -163,13 +192,34 @@ namespace _2048
 		{
 			if (move < 0 || this.PossibleMoves <= move)
 				throw new ArgumentOutOfRangeException("move");
-			return this.TryMove((_2048MoveDirection)move);
+			if (this.emptyTiles != null)
+			{
+				if (0 < this.emptyTiles.Count)
+				{
+					this.emptyTiles[move / 2].Value = move % 2 == 1 ? 4 : 2;
+					this.ResetEmptyTiles();
+					return true;
+				}
+				else
+					return false;
+			}else
+				return this.TryMove((_2048MoveDirection)move, false);
 		}
 
 
 		public AI.MCTS.IMCTSGame Clone()
 		{
 			return new _2048Model(this);
+		}
+
+
+		public int AutoMove()
+		{
+			if (!this.IsAutoMovePossible)
+				throw new InvalidOperationException("auto move is not possible.");
+			var move = this.GetAutoMoveIndex();
+			this.TryMove(move);
+			return move;
 		}
 
 
@@ -195,15 +245,16 @@ namespace _2048
 		}
 
 
-		private bool TryAddTile()
+		private bool TryAutoAddTile()
 		{
-			var emptyElems = (from elem in _matrix.TraverseByRows()
-							  where elem.Value == 0
-							  select elem).ToList();
-			if (0 < emptyElems.Count)
+			if (this.emptyTiles == null)
+				throw new InvalidOperationException(
+					"Trying to add new tile twice."
+				);
+			if (0 < this.emptyTiles.Count)
 			{
-				emptyElems[this.random.Next(emptyElems.Count)].Value =
-					this.GetNewTileValue();
+				this.TryMove(this.GetAutoMoveIndex());
+
 				return true;
 			}
 			else return false;
@@ -213,6 +264,61 @@ namespace _2048
 		private int GetNewTileValue()
 		{
 			return this.random.Next(10) == 0 ? 4 : 2;
+		}
+
+
+		private int GetAutoMoveIndex()
+		{
+			var move = this.random.Next(this.emptyTiles.Count) * 2;
+			if (this.random.Next(10) == 0)
+				move += 1;
+			return move;
+		}
+
+
+		private void SetEmptyTiles()
+		{
+			this.emptyTiles = this.GetEmptyTiles();
+			this._possibleMoves = this.emptyTiles.Count * 2;
+		}
+
+
+		private void ResetEmptyTiles()
+		{
+			this.emptyTiles = null;
+			this._possibleMoves = 0;
+			IMatrix<int>[] matrixes = { this._matrix, this._matrix.Rotate(Rotation.right) };
+			foreach (var matrix in matrixes)
+			{
+				foreach (var row in matrix.Rows())
+				{
+					int prev = 0;
+					foreach (var element in row)
+					{
+						if (element.Value == 0 || element.Value == prev)
+						{
+							this._possibleMoves = 4;
+							return;
+						}
+						prev = element.Value;
+					}
+				}
+			}
+		}
+
+
+		private List<Element<int>> GetEmptyTiles()
+		{
+			if (this.emptyTiles != null)
+				return this.emptyTiles;
+			else
+			{
+				return (
+					from elem in this._matrix.TraverseByRows()
+					where elem.Value == 0
+					select elem
+				).ToList();
+			}
 		}
 
 	}

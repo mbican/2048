@@ -303,5 +303,57 @@ namespace _2048Test
 			Assert.AreEqual(4, model.Matrix[3, 3]);
 			var a = "ahoj";
 		}
+
+
+		[TestMethod]
+		public void _2048ModelMCTSInterfaceTest()
+		{
+			var model = new _2048Model(0);
+			EMCTSGame.SeedRandom(0);
+			Trace.WriteLine("1:");
+			Trace.Write(model.Matrix.ToDebugString(4));
+			Assert.IsTrue(model.PlayersATurn);
+			int i = 1;
+			while (model.RandomMove())
+			{
+				Trace.WriteLine(string.Format("{0}: (score: {1})", ++i, model.Score));
+				Trace.Write(model.Matrix.ToDebugString(4));
+				Assert.AreEqual((i & 1) != 0, model.PlayersATurn);
+				Assert.AreEqual((i & 1) == 0, model.IsAutoMovePossible);
+			}
+			Assert.AreEqual(0, model.PossibleMoves);
+			Assert.IsFalse(model.IsAutoMovePossible);
+			var a = "ahoj";
+		}
+
+
+		[TestMethod]
+		public void _2048ModelMCTSInterfaceCloneTest()
+		{
+			var model = new _2048Model(0);
+			EMCTSGame.SeedRandom(0);
+			Trace.WriteLine("1:");
+			Trace.Write(model.Matrix.ToDebugString(4));
+			Assert.IsTrue(model.PlayersATurn);
+			Assert.IsFalse(model.IsAutoMovePossible);
+			model.RandomMove();
+			Assert.IsFalse(model.PlayersATurn);
+			Assert.IsTrue(model.IsAutoMovePossible);
+			var model2 = new _2048Model(model);
+			Assert.IsFalse(model2.PlayersATurn);
+			Assert.IsTrue(model2.IsAutoMovePossible);
+			model.AutoMove();
+			Assert.IsFalse(model2.PlayersATurn);
+			Assert.IsTrue(model2.IsAutoMovePossible);
+			Assert.IsFalse(model.Matrix.MatrixEqual(model2.Matrix));
+			Assert.IsTrue(model.PlayersATurn);
+			Assert.IsFalse(model.IsAutoMovePossible);
+			model2.AutoMove();
+			Assert.IsTrue(model.Matrix.MatrixEqual(model2.Matrix));
+			Assert.IsTrue(model.PlayersATurn);
+			Assert.IsFalse(model.IsAutoMovePossible);
+			Assert.IsTrue(model2.PlayersATurn);
+			Assert.IsFalse(model2.IsAutoMovePossible);
+		}
 	}
 }

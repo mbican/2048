@@ -14,6 +14,12 @@ namespace _2048.AI.MCTS
 		/// Possible implementation: -1: you lost; 0: draw; 1: you won.
 		/// </summary>
 		int Score { get; }
+
+
+		/// <summary>
+		/// True if it is player's A turn; false if it is player's B turn.
+		/// </summary>
+		bool PlayersATurn { get; }
 		
 		
 		/// <summary>
@@ -22,6 +28,28 @@ namespace _2048.AI.MCTS
 		/// method.
 		/// </summary>
 		int PossibleMoves { get; }
+
+
+		/// <summary>
+		/// True if game can perform the move by itself by <see cref="AutoMove"/>
+		/// method. e.g. when it's an one player game with some random component
+		/// which can be seen as player B.
+		/// </summary>
+		bool IsAutoMovePossible { get; }
+
+
+		/// <summary>
+		/// Perform's move automatically by game model. This is prefered method
+		/// over <see cref="TryMove"/> because there can be hidden probability 
+		/// distribution of different moves.
+		/// </summary>
+		/// <returns>
+		/// Returns move index. If you passed this value as argument into 
+		/// <see cref="TryMove"/> it would perform the same action.
+		/// </returns>
+		/// <exception cref="InvalidOperationException">
+		/// if <see cref="IsAutoMovePossible"/> is false.</exception>
+		int AutoMove();
 
 
 		/// <summary>
