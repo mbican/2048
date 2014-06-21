@@ -355,5 +355,7 @@ namespace _2048Test
 			Assert.IsTrue(model2.PlayersATurn);
 			Assert.IsFalse(model2.IsAutoMovePossible);
 		}
+
+
 	}
 }

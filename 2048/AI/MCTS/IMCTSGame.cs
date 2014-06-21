@@ -38,18 +38,20 @@ namespace _2048.AI.MCTS
 		bool IsAutoMovePossible { get; }
 
 
+		// IList<double> AutoMoveProbabilities { get; }
+
+
 		/// <summary>
-		/// Perform's move automatically by game model. This is prefered method
+		/// Select move automatically by game model. This is prefered method
 		/// over <see cref="TryMove"/> because there can be hidden probability 
 		/// distribution of different moves.
 		/// </summary>
 		/// <returns>
-		/// Returns move index. If you passed this value as argument into 
-		/// <see cref="TryMove"/> it would perform the same action.
+		/// Returns move index. To be passed into <see cref="TryMove"/>.
 		/// </returns>
 		/// <exception cref="InvalidOperationException">
 		/// if <see cref="IsAutoMovePossible"/> is false.</exception>
-		int AutoMove();
+		int GetAutoMoveIndex();
 
 
 		/// <summary>

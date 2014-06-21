@@ -16,15 +16,41 @@ namespace _2048.AI.MCTS
 	/// </summary>
 	class MCTS
 	{
-		// sqrt(1/5) - from Go game
-		private const double biasConst = 0.44721359549995793928183473374626;
+		public readonly int ParentsMove;
+		public readonly IMCTSGame Game;
 
-		private readonly IMCTSGame game;
-		private readonly MCTS parent;
+
+		private const double biasExponent = 0.5;
+
+
+		private MCTS parent;
 		private readonly List<MCTS> children = new List<MCTS>();
+		private bool childrenCreated;
 
 
-		public int BestMove { get { return 0; } }
+		private static Random random = new Random();
+
+
+		public int BestMove 
+		{ 
+			get 
+			{ 
+				if (this._bestMove < 0)
+				{
+					int maxVisits = 0;
+					foreach (var child in this.children)
+					{
+						if (maxVisits < child.Visits)
+						{
+							maxVisits = child.Visits;
+							this._bestMove = child.ParentsMove;
+						}
+					}
+				}
+				return this._bestMove;
+			} 
+		}
+		private int _bestMove = -1;
 
 
 		public int Visits { get { return this._visits; } }
@@ -32,9 +58,6 @@ namespace _2048.AI.MCTS
 		private static int _static_visits;
 		public int Score { get { return this._score; } }
 		private int _score;
-
-
-		private static Random random = new Random();
 
 
 		public double WinRate
@@ -50,16 +73,16 @@ namespace _2048.AI.MCTS
 		{
 			get
 			{
-				return biasConst * Math.Sqrt(Math.Log(this.parentsVisits) / this._visits);
+				return Math.Pow(Math.Log(this.parentsVisits) / this._visits, biasExponent);
 			}
 		}
 
 
-		public double UCT
+		public double Uct
 		{
 			get
 			{
-				return WinRate + Bias;
+				return WinRate * Bias;
 			}
 		}
 
@@ -100,10 +123,17 @@ namespace _2048.AI.MCTS
 		private int _depth = -1;
 
 
-		public MCTS(IMCTSGame game, MCTS parent = null)
+		public MCTS(IMCTSGame game, int parentsMove = 0, MCTS parent = null)
 		{
-			this.game = game;
+			this.Game = game;
+			this.ParentsMove = parentsMove;
 			this.parent = parent;
+		}
+
+
+		public override string ToString()
+		{
+			return string.Format("^{0}#{1}:{2:F0}({3:F2}*{4:F0})", this.depth, this.Visits, this.Uct, this.Bias, this.WinRate);
 		}
 
 
@@ -112,60 +142,48 @@ namespace _2048.AI.MCTS
 			bool result = false;
 			if (this.Visits == 0)
 			{
-				for (int move = 0; move < this.game.PossibleMoves; move++)
-				{
-					var gameClone = this.game.Clone();
-					bool moved;
-					do
-					{
-						moved = gameClone.TryMove(move);
-						if (moved)
-							this.children.Add(new MCTS(gameClone, this));
-					} while (!moved && ++move < this.game.PossibleMoves);
-				}
-				if (this.children.Count == 0)
-				{
-					result = true;
-					this._score += this.game.Score;
-					this._complete = true;
-				}
+				var gameClone = this.Game.Clone();
+				gameClone.RandomFinish();
+				result = true;
+				this._score += gameClone.Score;
 			}
+			else
+				this.EnsureChildren();
 			if (0 < this.children.Count)
 			{
 				while (!result)
 				{
-					this.children.Sort(
-						(x, y) =>
-						{
-							if (x.Complete || y.Complete)
-								return (x.Complete ? 1 : 0) - (y.Complete ? 1 : 0);
-							else if (x.Visits == 0 || y.Visits == 0)
-								return x.Visits - y.Visits;
-							else
-								return x.UCT.CompareTo(y.UCT);
-						}
-					);
-					int emptyChildren = 0;
-					foreach (var child in this.children)
+					int unvisited = 0;
+					double maxUct = double.MinValue;
+					MCTS chosenChild = null;
+					foreach(var child in this.children)
 					{
-						if (child.Visits == 0)
-							emptyChildren += 1;
-						else
-							break;
+						if (!child.Complete)
+						{
+							if (child.Visits == 0)
+							{
+								if (random.Next(unvisited++) == 0)
+									chosenChild = child;
+							}
+							else if (unvisited == 0 && maxUct < child.Uct)
+							{
+								maxUct = child.Uct;
+								chosenChild = child;
+							}
+						}
 					}
-					var chosen_child = this.children[random.Next(emptyChildren)];
-					if (chosen_child.Complete)
+					if (chosenChild == null)
 						break;
-					this._score -= chosen_child.Score;
+					this._score -= chosenChild.Score;
 					try
 					{
-						result = chosen_child.Execute();
+						result = chosenChild.Execute();
 					}
 					finally
 					{
-						this._score += chosen_child.Score;
+						this._score += chosenChild.Score;
 					}
-					if (!result && !chosen_child.Complete)
+					if (!result && !chosenChild.Complete)
 						throw new InvalidOperationException(
 							"Node didn't execute and Complete is false."
 						);
@@ -175,12 +193,89 @@ namespace _2048.AI.MCTS
 			{
 				this._visits += 1;
 				_static_visits += 1;
+				this._bestMove = -1;
 			}
 			else
 			{
 				this._complete = true;
 			}
 			return result;
+		}
+
+
+		public void Execute(int visits)
+		{
+			while (this.Visits < visits && this.Execute()) ;
+		}
+
+
+		public bool TryAutoMove(out MCTS newRoot)
+		{
+			if (this.Game.IsAutoMovePossible)
+			{
+				int move = this.Game.GetAutoMoveIndex();
+				newRoot = this.GetChildByMove(move);
+				Object buga; // nastavovat parent na null není dobré (je to optimalizace kvůli GC)
+				newRoot.parent = null;
+				return true;
+			}
+			else
+				newRoot = this;
+				return false;
+		}
+
+
+		public bool TryMove(int iterations, out MCTS newRoot, bool preferAutoMove = true)
+		{
+			if (preferAutoMove && this.TryAutoMove(out newRoot))
+				return true;
+			else
+			{
+				this.Execute(iterations);
+				if (this.BestMove < 0)
+				{
+					newRoot = this;
+					return false;
+				}
+				newRoot = this.GetChildByMove(this.BestMove);
+				Object buga; // nastavovat parent na null není dobré (je to optimalizace kvůli GC)
+				newRoot.parent = null;
+				return true;
+			}
+		}
+
+
+		private MCTS GetChildByMove(int move)
+		{
+			this.EnsureChildren();
+			foreach (var child in this.children)
+			{
+				if (child.ParentsMove == move)
+				{
+					return child;
+				}
+			}
+			throw new InvalidOperationException();
+		}
+
+
+		private void EnsureChildren()
+		{
+			if (!this.childrenCreated)
+			{
+				this.childrenCreated = true;
+				for (int move = 0; move < this.Game.PossibleMoves; move++)
+				{
+					var gameClone = this.Game.Clone();
+					bool moved;
+					do
+					{
+						moved = gameClone.TryMove(move);
+						if (moved)
+							this.children.Add(new MCTS(gameClone, move, this));
+					} while (!moved && ++move < this.Game.PossibleMoves);
+				}
+			}
 		}
 
 
@@ -203,6 +298,7 @@ namespace _2048.AI.MCTS
 		public static void SetRandomSeed(int seed)
 		{
 			random = new Random(seed);
+			EMCTSGame.SeedRandom(seed);
 		}
 	}
 }

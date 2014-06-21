@@ -79,14 +79,14 @@ namespace _2048.Matrix
 
 		private int GetIndex(int rowIndex, int columnIndex)
 		{
-			if (rowIndex < 0 || this.RowCount <= rowIndex)
+			if (rowIndex < 0 || this._rowCount <= rowIndex)
 			{
 				throw new ArgumentOutOfRangeException(
 					"rowIndex",
 					"rowIndex is out of range."
 				);
 			}
-			if (columnIndex < 0 || this.ColumnCount <= columnIndex)
+			if (columnIndex < 0 || this._columnCount <= columnIndex)
 			{
 				throw new ArgumentOutOfRangeException(
 					"columnIndex",
@@ -95,7 +95,7 @@ namespace _2048.Matrix
 			}
 
 
-			return rowIndex * this.ColumnCount + columnIndex;
+			return rowIndex * this._columnCount + columnIndex;
 
 		}
 

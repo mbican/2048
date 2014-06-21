@@ -14,7 +14,7 @@ using _2048.Matrix;
 
 namespace _2048
 {
-	class _2048Model : AI.MCTS.IMCTSGame
+	class _2048Model_backup : AI.MCTS.IMCTSGame
 	{
 		public readonly IMatrix<int> Matrix;
 
@@ -46,7 +46,7 @@ namespace _2048
 		}
 
 
-		public _2048Model(int? randomSeed = null)
+		public _2048Model_backup(int? randomSeed = null)
 		{
 			this._matrix = new Matrix<int>(size, size, 0);
 			this.Matrix = this._matrix.AsReadOnly();
@@ -64,7 +64,7 @@ namespace _2048
 		}
 
 
-		public _2048Model(_2048Model model)
+		public _2048Model_backup(_2048Model_backup model)
 		{
 			this._matrix = model._matrix.ToMatrix();
 			this.Matrix = this._matrix.AsReadOnly();
@@ -209,7 +209,7 @@ namespace _2048
 
 		public AI.MCTS.IMCTSGame Clone()
 		{
-			return new _2048Model(this);
+			return new _2048Model_backup(this);
 		}
 
 
