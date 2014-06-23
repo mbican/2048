@@ -22,6 +22,27 @@ namespace _2048Test
 		}
 
 		[TestMethod]
+		public void _2048ModelTest3()
+		{
+			for (int counter = 0; counter < 1000; ++counter)
+			{
+				var model = new _2048Model();
+				var moves = model.RandomFinish();
+				Trace.Write(model.Matrix.ToDebugString(5));
+				Assert.IsFalse(model.IsAutoMovePossible);
+				Assert.AreEqual(0, model.PossibleMoves);
+				if (model.PlayersATurn)
+				{
+					Assert.IsFalse(model.MoveDown());
+					Assert.IsFalse(model.MoveUp());
+					Assert.IsFalse(model.MoveLeft());
+					Assert.IsFalse(model.MoveRight());
+				}
+				Assert.IsFalse(model.Matrix.TraverseByRows().Any((v) => v.Value == 0));
+			}
+		}
+
+		[TestMethod]
 		public void _2048ModelTest1()
 		{
 			var model = new _2048Model(0);

@@ -37,7 +37,8 @@ namespace _2048.AI.MCTS
 			{ 
 				if (this._bestMove < 0)
 				{
-					int maxVisits = 0;
+					this.EnsureChildren();
+					int maxVisits = int.MinValue;
 					foreach (var child in this.children)
 					{
 						if (maxVisits < child.Visits)
@@ -103,24 +104,7 @@ namespace _2048.AI.MCTS
 		}
 
 
-		private int depth
-		{
-			get
-			{
-				if(this._depth < 0)
-				{
-					this._depth = 0;
-					var parent = this.parent;
-					while(parent != null)
-					{
-						this._depth++;
-						parent = parent.parent;
-					}
-				}
-				return this._depth;
-			}
-		}
-		private int _depth = -1;
+		private readonly int depth;
 
 
 		public MCTS(IMCTSGame game, int parentsMove = 0, MCTS parent = null)
@@ -128,6 +112,8 @@ namespace _2048.AI.MCTS
 			this.Game = game;
 			this.ParentsMove = parentsMove;
 			this.parent = parent;
+			if (this.parent != null)
+				this.depth = this.parent.depth + 1;
 		}
 
 

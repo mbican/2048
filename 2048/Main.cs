@@ -11,22 +11,15 @@ namespace _2048
 	{
 		public static void Main()
 		{
-			// _2048RandomFinishPerformance(TimeSpan.FromSeconds(1));
-			// Console.ReadLine();
-			// _2048MCTS(5000);
-			
 			_2048RandomFinishPerformance(
-				TimeSpan.FromSeconds(1),
-				() => new _2048Model_backup(),
-				"_2048Model_backup"
-			);
-			_2048RandomFinishPerformance(
-				TimeSpan.FromSeconds(1),
+				TimeSpan.FromSeconds(0.1),
 				()=>new _2048Model(),
 				"_2048Model"
 			);
 			 
-			// _2048MCTS(200,20);
+			//Console.ReadLine();
+			
+			//_2048MCTS(100,10);
 			Console.ReadLine();
 		}
 
@@ -61,7 +54,6 @@ namespace _2048
 				}
 				if (!root.TryMove(iterations, out root) && ! root.Complete)
 					throw new InvalidOperationException("not moved.");
-				GC.Collect();
 			}
 			var a = "ahoj";
 			Console.WriteLine(string.Format("move: {0}", counter));

@@ -33,7 +33,19 @@ namespace _2048
 		private const int startTiles = 2;
 		private readonly int[,] _matrix = new int[size, size];
 		private int? emptyTilesCount;
-		private readonly Random random;
+
+		private Random random
+		{
+			get
+			{
+				if (this._random != null)
+					return this._random;
+				else
+					return _static_random;
+			}
+		}
+		private readonly Random _random;
+		private static readonly Random _static_random = new Random();
 
 
 		public int Score { get { return this._score; } }
@@ -59,9 +71,7 @@ namespace _2048
 		public _2048Model(int? randomSeed = null)
 		{
 			if (randomSeed.HasValue)
-				random = new Random(randomSeed.Value);
-			else
-				random = new Random();
+				this._random = new Random(randomSeed.Value);
 
 			for (var counter = 0; counter < startTiles; counter++)
 			{
@@ -74,12 +84,15 @@ namespace _2048
 		public _2048Model(_2048Model model)
 		{
 			Array.Copy(model._matrix, this._matrix, size * size);
-			var formatter = new BinaryFormatter();
-			using (Stream stream = new MemoryStream())
+			if (model._random != null)
 			{
-				formatter.Serialize(stream, model.random);
-				stream.Position = 0;
-				this.random = (Random)formatter.Deserialize(stream);
+				var formatter = new BinaryFormatter();
+				using (Stream stream = new MemoryStream())
+				{
+					formatter.Serialize(stream, model._random);
+					stream.Position = 0;
+					this._random = (Random)formatter.Deserialize(stream);
+				}
 			}
 			this._score = model._score;
 			if (model.emptyTilesCount.HasValue)
