@@ -12,12 +12,25 @@ namespace _2048
 		public static void Main()
 		{
 			// _2048RandomFinishPerformance(TimeSpan.FromSeconds(1));
-			Console.ReadLine();
-			_2048MCTS(2);
+			// Console.ReadLine();
+			// _2048MCTS(5000);
+			_2048RandomFinishPerformance(
+				TimeSpan.FromSeconds(10),
+				() => new _2048Model_backup(),
+				"_2048Model_backup"
+			);
+			_2048RandomFinishPerformance(
+				TimeSpan.FromSeconds(10),
+				()=>new _2048Model(),
+				"_2048Model"
+			);
+			/*
+			_2048MCTS(10000);
+			 */
 			Console.ReadLine();
 		}
 
-		static void _2048RandomFinishPerformance(TimeSpan timespan)
+		static void _2048RandomFinishPerformance(TimeSpan timespan, Func<IMCTSGame> constructor,string name)
 		{
 			var stopWatch = new System.Diagnostics.Stopwatch();
 			stopWatch.Start();
@@ -25,12 +38,12 @@ namespace _2048
 			int moves = 0;
 			while (stopWatch.Elapsed < timespan)
 			{
-				var model = new _2048Model();
+				var model = constructor();
 				moves += model.RandomFinish();
 				counter++;
 			}
 			stopWatch.Stop();
-			Console.WriteLine(string.Format("2048Model performance test RandomFinish() in {2} sec.: {0} 1/s ({1} moves/s)", counter / timespan.TotalSeconds, moves / timespan.TotalSeconds, timespan.TotalSeconds));
+			Console.WriteLine(string.Format("{3}.RandomFinish() in {2} sec.: {0} 1/s ({1} moves/s)", counter / timespan.TotalSeconds, moves / timespan.TotalSeconds, timespan.TotalSeconds,name));
 		}
 
 		static void _2048MCTS(int iterations)

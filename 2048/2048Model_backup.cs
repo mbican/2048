@@ -37,12 +37,12 @@ namespace _2048
 		public bool PlayersATurn { get { return this.emptyTiles == null; } }
 
 
-		public bool IsAutoMovePossible 
-		{ 
-			get 
-			{ 
+		public bool IsAutoMovePossible
+		{
+			get
+			{
 				return this.emptyTiles != null && 0 < this.emptyTiles.Count;
-			} 
+			}
 		}
 
 
@@ -73,7 +73,7 @@ namespace _2048
 			{
 				formatter.Serialize(stream, model.random);
 				stream.Position = 0;
-				this.random = (Random) formatter.Deserialize(stream);
+				this.random = (Random)formatter.Deserialize(stream);
 			}
 			this._score = model._score;
 			if (model.emptyTiles == null)
@@ -135,7 +135,7 @@ namespace _2048
 									// move tile into empty space
 									if (destination.Current.Value == 0)
 									{
-										destination.Current.Value = 
+										destination.Current.Value =
 											source.Current.Value;
 										source.Current.Value = 0;
 										moved = true;
@@ -152,7 +152,7 @@ namespace _2048
 										repeat = true;
 									}
 									// merge tiles with the same value
-									else if (destination.Current.Value == 
+									else if (destination.Current.Value ==
 										source.Current.Value)
 									{
 										this._score += destination.Current.Value *= 2;
@@ -202,7 +202,8 @@ namespace _2048
 				}
 				else
 					return false;
-			}else
+			}
+			else
 				return this.TryMove((_2048MoveDirection)move, false);
 		}
 

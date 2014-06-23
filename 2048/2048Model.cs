@@ -16,14 +16,24 @@ namespace _2048
 {
 	class _2048Model : AI.MCTS.IMCTSGame
 	{
-		public readonly IMatrix<int> Matrix;
+		public IMatrix<int> Matrix
+		{
+			get
+			{
+				if (this.__matrix == null)
+					this.__matrix = Matrix<int>.FromArray(this._matrix, size);
+				return this.__matrix;
+			}
+		}
+		private IMatrix<int> __matrix;
 
 
 		private const int size = 4;
+		private const int size_sq = size * size;
 		private const int startTiles = 2;
-		private readonly Matrix<int> _matrix;
+		private readonly int[,] _matrix = new int[size, size];
+		private int? emptyTilesCount;
 		private readonly Random random;
-		private List<Element<int>> emptyTiles;
 
 
 		public int Score { get { return this._score; } }
@@ -34,23 +44,20 @@ namespace _2048
 		private int _possibleMoves;
 
 
-		public bool PlayersATurn { get { return this.emptyTiles == null; } }
+		public bool PlayersATurn { get { return !this.emptyTilesCount.HasValue; } }
 
 
-		public bool IsAutoMovePossible 
-		{ 
-			get 
-			{ 
-				return this.emptyTiles != null && 0 < this.emptyTiles.Count;
-			} 
+		public bool IsAutoMovePossible
+		{
+			get
+			{
+				return this.emptyTilesCount.HasValue && 0 < this.emptyTilesCount.Value;
+			}
 		}
 
 
 		public _2048Model(int? randomSeed = null)
 		{
-			this._matrix = new Matrix<int>(size, size, 0);
-			this.Matrix = this._matrix.AsReadOnly();
-
 			if (randomSeed.HasValue)
 				random = new Random(randomSeed.Value);
 			else
@@ -66,20 +73,19 @@ namespace _2048
 
 		public _2048Model(_2048Model model)
 		{
-			this._matrix = model._matrix.ToMatrix();
-			this.Matrix = this._matrix.AsReadOnly();
+			Array.Copy(model._matrix, this._matrix, size * size);
 			var formatter = new BinaryFormatter();
 			using (Stream stream = new MemoryStream())
 			{
 				formatter.Serialize(stream, model.random);
 				stream.Position = 0;
-				this.random = (Random) formatter.Deserialize(stream);
+				this.random = (Random)formatter.Deserialize(stream);
 			}
 			this._score = model._score;
-			if (model.emptyTiles == null)
-				this.ResetEmptyTiles();
-			else
+			if (model.emptyTilesCount.HasValue)
 				this.SetEmptyTiles();
+			else
+				this.ResetEmptyTiles(force: true);
 		}
 
 
@@ -109,74 +115,73 @@ namespace _2048
 
 		public bool TryMove(_2048MoveDirection move, bool autoAddTile = true)
 		{
-			if (this.emptyTiles != null)
+			if (this.emptyTilesCount.HasValue)
 				throw new InvalidOperationException("Tile wasn't added after previous move!");
 			bool moved = false;
-			foreach (var row in this.GetNormalizedMatrix(move).Rows())
+			var get = this.CreateValueGetter(move);
+			var set = this.CreateValueSetter(move);
+			for (int row = 0; row < size; ++row)
 			{
-				using (var destination = row.GetEnumerator())
+				int destination = -1;
+				int destinationValue;
+				int source = 0;
+				int sourceValue = -1;
+				bool sourceMoved = source < size;
+				do
 				{
-					using (var source = row.GetEnumerator())
+					destinationValue = get(row, ++destination);
+					// move source to non-empty tile.
+					while ((sourceMoved = ++source < size)
+						&& (sourceValue = get(row, source)) == 0
+					) ;
+					if (sourceMoved)
 					{
-						bool sourceMoved = source.MoveNext();
+						bool repeat;
 						do
 						{
-							// move source to non-empty tile.
-							while ((sourceMoved = source.MoveNext())
-								&& source.Current.Value == 0
-							) ;
-							if (sourceMoved)
+							repeat = false;
+							// move tile into empty space
+							if (destinationValue == 0)
 							{
-								destination.MoveNext();
-								bool repeat;
-								do
-								{
-									repeat = false;
-									// move tile into empty space
-									if (destination.Current.Value == 0)
-									{
-										destination.Current.Value = 
-											source.Current.Value;
-										source.Current.Value = 0;
-										moved = true;
-										/*
-											even moved tile can be subsequently
-											merged so we need to move the source
-											enumerator to the next tile and 
-											repeat with the same destination 
-											to try to merge them.
-										 */
-										while ((sourceMoved = source.MoveNext())
-											&& source.Current.Value == 0
-										) ;
-										repeat = true;
-									}
-									// merge tiles with the same value
-									else if (destination.Current.Value == 
-										source.Current.Value)
-									{
-										this._score += destination.Current.Value *= 2;
-										source.Current.Value = 0;
-										moved = true;
-									}
-									/*
-									 * if there is a gap between source and
-									 * destination we can try to move destination
-									 * closer to source and repeat.
-									 */
-									else if (
-									   destination.Current.ColumnIndex <
-									   source.Current.ColumnIndex - 1
-									)
-									{
-										destination.MoveNext();
-										repeat = true;
-									}
-								} while (repeat && sourceMoved);
+								destinationValue = sourceValue;
+								set(row, destination, destinationValue);
+								sourceValue = 0;
+								set(row, source, sourceValue);
+								moved = true;
+								/*
+									even moved tile can be subsequently
+									merged so we need to move the source
+									enumerator to the next tile and 
+									repeat with the same destination 
+									to try to merge them.
+									*/
+								while ((sourceMoved = ++source < size)
+									&& (sourceValue = get(row, source)) == 0
+								) ;
+								repeat = true;
 							}
-						} while (sourceMoved);
+							// merge tiles with the same value
+							else if (destinationValue == sourceValue)
+							{
+								this._score += destinationValue *= 2;
+								set(row, destination, destinationValue);
+								sourceValue = 0;
+								set(row, source, sourceValue);
+								moved = true;
+							}
+							/*
+								* if there is a gap between source and
+								* destination we can try to move destination
+								* closer to source and repeat.
+								*/
+							else if (destination < source - 1)
+							{
+								destinationValue = get(row, ++destination);
+								repeat = true;
+							}
+						} while (repeat && sourceMoved);
 					}
-				}
+				} while (sourceMoved);
 			}
 			if (moved)
 			{
@@ -192,17 +197,32 @@ namespace _2048
 		{
 			if (move < 0 || this.PossibleMoves <= move)
 				throw new ArgumentOutOfRangeException("move");
-			if (this.emptyTiles != null)
+			if (this.emptyTilesCount.HasValue)
 			{
-				if (0 < this.emptyTiles.Count)
+				if (0 < this.emptyTilesCount.Value)
 				{
-					this.emptyTiles[move / 2].Value = move % 2 == 1 ? 4 : 2;
+					int expectedIndex = move / 2;
+					int index = -1;
+					for (int rowIndex = 0; rowIndex < size && index < expectedIndex; ++rowIndex)
+					{
+						for (int colIndex = 0; colIndex < size; ++colIndex)
+						{
+							if (this._matrix[rowIndex, colIndex] == 0 &&
+								++index == expectedIndex)
+							{
+								this._matrix[rowIndex, colIndex] = move % 2 == 1 ? 4 : 2;
+								this.__matrix = null;
+								break;
+							}
+						}
+					}
 					this.ResetEmptyTiles();
 					return true;
 				}
 				else
 					return false;
-			}else
+			}
+			else
 				return this.TryMove((_2048MoveDirection)move, false);
 		}
 
@@ -217,42 +237,154 @@ namespace _2048
 		{
 			if (!this.IsAutoMovePossible)
 				throw new InvalidOperationException("auto move is not possible.");
-			var move = this.random.Next(this.emptyTiles.Count) * 2;
+			var move = this.random.Next(this.emptyTilesCount.Value) * 2;
 			if (this.random.Next(10) == 0)
 				move += 1;
 			return move;
 		}
 
 
-		/// <summary>
-		/// Transforms matrix so MoveLeft performed on the resulting matrix
-		/// is translated into requested <paramref name="move"/>.
-		/// </summary>
-		private IMatrix<int> GetNormalizedMatrix(_2048MoveDirection move)
+		private Func<int, int, int> CreateValueGetter(_2048MoveDirection move)
 		{
 			switch (move)
 			{
 				case _2048MoveDirection.left:
-					return this._matrix;
+					return (rowIndex, colIndex) => this._matrix[
+						rowIndex,
+						colIndex
+					];
 				case _2048MoveDirection.right:
-					return this._matrix.Rotate(Rotation._180);
+					return (rowIndex, colIndex) => this._matrix[
+						size - rowIndex - 1,
+						size - colIndex - 1
+					];
 				case _2048MoveDirection.up:
-					return this._matrix.Rotate(Rotation.left);
+					return (rowIndex, colIndex) => this._matrix[
+						colIndex,
+						rowIndex
+					];
 				case _2048MoveDirection.down:
-					return this._matrix.Rotate(Rotation.right);
+					return (rowIndex, colIndex) => this._matrix[
+						size - colIndex - 1,
+						size - rowIndex - 1
+					];
 				default:
-					throw new ArgumentException("unknown move", "move");
+					throw new ArgumentException(
+						string.Format(
+							"uknown _2048MoveDirection (value: {0})",
+							move
+						)
+					);
+			}
+		}
+
+
+		private Action<int, int, int> CreateValueSetter(_2048MoveDirection move)
+		{
+			switch (move)
+			{
+				case _2048MoveDirection.left:
+					return (rowIndex, colIndex, value) =>
+					{
+						this.__matrix = null;
+						this._matrix[
+							rowIndex,
+							colIndex
+						] = value;
+					};
+				case _2048MoveDirection.right:
+					return (rowIndex, colIndex, value) =>
+					{
+						this.__matrix = null;
+						this._matrix[
+							size - rowIndex - 1,
+							size - colIndex - 1
+						] = value;
+					};
+				case _2048MoveDirection.up:
+					return (rowIndex, colIndex, value) =>
+					{
+						this.__matrix = null;
+						this._matrix[
+							colIndex,
+							rowIndex
+						] = value;
+					};
+				case _2048MoveDirection.down:
+					return (rowIndex, colIndex, value) =>
+					{
+						this.__matrix = null;
+						this._matrix[
+							size - colIndex - 1,
+							size - rowIndex - 1
+						] = value;
+					};
+				default:
+					throw new ArgumentException(
+						string.Format(
+							"uknown _2048MoveDirection (value: {0})",
+							move
+						)
+					);
+			}
+		}
+
+
+		[Obsolete]
+		private Func<int, int, int> CreateNormalizedRowIndexGetter(_2048MoveDirection move)
+		{
+			switch (move)
+			{
+				case _2048MoveDirection.left:
+					return (rowIndex, columnIndex) => rowIndex;
+				case _2048MoveDirection.right:
+					return (rowIndex, columnIndex) => size - rowIndex - 1;
+				case _2048MoveDirection.up:
+					return (rowIndex, columnIndex) => columnIndex;
+				case _2048MoveDirection.down:
+					return (rowIndex, columnIndex) => size - columnIndex - 1;
+				default:
+					throw new ArgumentException(
+						string.Format(
+							"uknown _2048MoveDirection (value: {0})",
+							move
+						)
+					);
+			}
+		}
+
+
+		[Obsolete]
+		private Func<int, int, int> CreateNormalizedColumnIndexGetter(_2048MoveDirection move)
+		{
+			switch (move)
+			{
+				case _2048MoveDirection.left:
+					return (rowIndex, columnIndex) => columnIndex;
+				case _2048MoveDirection.right:
+					return (rowIndex, columnIndex) => size - columnIndex - 1;
+				case _2048MoveDirection.up:
+					return (rowIndex, columnIndex) => rowIndex;
+				case _2048MoveDirection.down:
+					return (rowIndex, columnIndex) => size - rowIndex - 1;
+				default:
+					throw new ArgumentException(
+						string.Format(
+							"uknown _2048MoveDirection (value: {0})",
+							move
+						)
+					);
 			}
 		}
 
 
 		private bool TryAutoAddTile()
 		{
-			if (this.emptyTiles == null)
+			if (!this.emptyTilesCount.HasValue)
 				throw new InvalidOperationException(
 					"Trying to add new tile twice."
 				);
-			if (0 < this.emptyTiles.Count)
+			if (0 < this.emptyTilesCount.Value)
 			{
 				this.TryMove(this.GetAutoMoveIndex());
 
@@ -270,46 +402,57 @@ namespace _2048
 
 		private void SetEmptyTiles()
 		{
-			this.emptyTiles = this.GetEmptyTiles();
-			this._possibleMoves = this.emptyTiles.Count * 2;
+			this.emptyTilesCount = this.GetEmptyTilesCount();
+			this._possibleMoves = this.emptyTilesCount.Value * 2;
 		}
 
 
-		private void ResetEmptyTiles()
+		private void ResetEmptyTiles(bool force = false)
 		{
-			this.emptyTiles = null;
-			this._possibleMoves = 0;
-			IMatrix<int>[] matrixes = { this._matrix, this._matrix.Rotate(Rotation.right) };
-			foreach (var matrix in matrixes)
+			if (force || this.emptyTilesCount.HasValue)
 			{
-				foreach (var row in matrix.Rows())
+				this.emptyTilesCount = null;
+				this._possibleMoves = 0;
+				var getLeft = this.CreateValueGetter(_2048MoveDirection.left);
+				var getUp = this.CreateValueGetter(_2048MoveDirection.up);
+				for (int rowIndex = 0; rowIndex < size; ++rowIndex)
 				{
 					int prev = 0;
-					foreach (var element in row)
+					int prevUp = 0;
+					for (int colIndex = 0; colIndex < size; ++colIndex)
 					{
-						if (element.Value == 0 || element.Value == prev)
+						int value = getLeft(rowIndex, colIndex);
+						int valueUp = getUp(rowIndex, colIndex);
+						if ((value == 0 && value == prev) || (valueUp == 0 && valueUp == prevUp))
 						{
 							this._possibleMoves = 4;
 							return;
 						}
-						prev = element.Value;
+						prev = value;
+						prevUp = valueUp;
 					}
 				}
 			}
 		}
 
 
-		private List<Element<int>> GetEmptyTiles()
+		private int GetEmptyTilesCount()
 		{
-			if (this.emptyTiles != null)
-				return this.emptyTiles;
+			if (this.emptyTilesCount.HasValue)
+				return this.emptyTilesCount.Value;
 			else
 			{
-				return (
-					from elem in this._matrix.TraverseByRows()
-					where elem.Value == 0
-					select elem
-				).ToList();
+				int count = 0;
+				for (int rowIndex = 0; rowIndex < size; ++rowIndex)
+				{
+					for (int colIndex = 0; colIndex < size; ++colIndex)
+					{
+						if (this._matrix[rowIndex, colIndex] == 0)
+							count++;
+					}
+				}
+				this.emptyTilesCount = count;
+				return count;
 			}
 		}
 

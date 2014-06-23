@@ -121,5 +121,21 @@ namespace _2048.Matrix
 		}
 
 
+		public static Matrix<T> FromArray(Array array, int rowLength)
+		{
+			if (array == null)
+				throw new ArgumentNullException("array");
+			if (array.Length % rowLength != 0)
+				throw new ArgumentException("invalid row length");
+			var result = new Matrix<T>(array.Length / rowLength, rowLength, default(T));
+			var en = array.GetEnumerator();
+			foreach(var element in result.TraverseByRows())
+			{
+				if (!en.MoveNext())
+					throw new InvalidOperationException();
+				element.Value = (T)en.Current;
+			}
+			return result;
+		}
 	}
 }
