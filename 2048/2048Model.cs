@@ -216,6 +216,10 @@ namespace _2048
 							}
 						}
 					}
+					if (index != expectedIndex)
+						throw new InvalidOperationException(
+							"internal 2048Model error: empty tile wasn't found."
+						);
 					this.ResetEmptyTiles();
 					return true;
 				}
@@ -423,7 +427,7 @@ namespace _2048
 					{
 						int value = getLeft(rowIndex, colIndex);
 						int valueUp = getUp(rowIndex, colIndex);
-						if ((value == 0 && value == prev) || (valueUp == 0 && valueUp == prevUp))
+						if (value == 0 || value == prev || valueUp == 0 || valueUp == prevUp)
 						{
 							this._possibleMoves = 4;
 							return;

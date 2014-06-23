@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 using _2048;
@@ -8,6 +9,18 @@ namespace _2048Test
 	[TestClass]
 	public class _2048ModelTest
 	{
+		[TestMethod]
+		public void _2048ModelTest2()
+		{
+			var model = new _2048Model(0);
+			EMCTSGame.SeedRandom(0);
+			var moves = model.RandomFinish();
+			Trace.Write(model.Matrix.ToDebugString(5));
+			Assert.IsFalse(model.IsAutoMovePossible);
+			Assert.AreEqual(0,model.PossibleMoves); 
+			Assert.IsFalse(model.Matrix.TraverseByRows().Any((v) => v.Value == 0));
+		}
+
 		[TestMethod]
 		public void _2048ModelTest1()
 		{

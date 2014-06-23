@@ -14,19 +14,19 @@ namespace _2048
 			// _2048RandomFinishPerformance(TimeSpan.FromSeconds(1));
 			// Console.ReadLine();
 			// _2048MCTS(5000);
+			
 			_2048RandomFinishPerformance(
-				TimeSpan.FromSeconds(10),
+				TimeSpan.FromSeconds(1),
 				() => new _2048Model_backup(),
 				"_2048Model_backup"
 			);
 			_2048RandomFinishPerformance(
-				TimeSpan.FromSeconds(10),
+				TimeSpan.FromSeconds(1),
 				()=>new _2048Model(),
 				"_2048Model"
 			);
-			/*
-			_2048MCTS(10000);
-			 */
+			 
+			// _2048MCTS(200,20);
 			Console.ReadLine();
 		}
 
@@ -43,16 +43,16 @@ namespace _2048
 				counter++;
 			}
 			stopWatch.Stop();
-			Console.WriteLine(string.Format("{3}.RandomFinish() in {2} sec.: {0} 1/s ({1} moves/s)", counter / timespan.TotalSeconds, moves / timespan.TotalSeconds, timespan.TotalSeconds,name));
+			Console.WriteLine(string.Format("{3}.RandomFinish() in {2} sec.: {0} 1/s ({1} moves/s; {4} moves/game)", counter / timespan.TotalSeconds, moves / timespan.TotalSeconds, timespan.TotalSeconds,name, moves / counter));
 		}
 
-		static void _2048MCTS(int iterations)
+		static void _2048MCTS(int iterations,int log_modulus)
 		{
 			var root = new MCTS(new _2048Model());
 			int counter = -1;
 			while (!root.Complete)
 			{
-				if (++counter % 1 == 0)
+				if (++counter % log_modulus == 0)
 				{
 					Console.WriteLine(string.Format("move: {0}", counter));
 					Console.WriteLine(string.Format("score: {0}", root.Game.Score));
