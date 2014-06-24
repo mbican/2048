@@ -65,6 +65,7 @@
     <Compile Include="2048Model.cs" />
     <Compile Include="2048MoveDirection.cs" />
     <Compile Include="AI\ANN\IANNGame.cs" />
+    <Compile Include="AI\MCTS\MCTS_backup.cs" />
     <Compile Include="AI\MCTS\IMCTSGame.cs" />
     <Compile Include="AI\MCTS\MCTS.cs" />
     <Compile Include="App.xaml.cs">

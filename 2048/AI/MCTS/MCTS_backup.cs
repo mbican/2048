@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 
@@ -15,7 +14,7 @@ namespace _2048.AI.MCTS
 	/// <summary>
 	/// This class implements Monte Carlo tree search algorithm.
 	/// </summary>
-	class MCTS
+	class MCTS_backup
 	{
 		public readonly int ParentsMove;
 		public readonly IMCTSGame Game;
@@ -24,10 +23,9 @@ namespace _2048.AI.MCTS
 		private const double biasExponent = 0.5;
 
 
-		private MCTS parent;
-		private readonly List<MCTS> children = new List<MCTS>();
+		private MCTS_backup parent;
+		private readonly List<MCTS_backup> children = new List<MCTS_backup>();
 		private bool childrenCreated;
-		private int _score;
 
 
 		private static Random random = new Random();
@@ -39,20 +37,14 @@ namespace _2048.AI.MCTS
 			{ 
 				if (this._bestMove < 0)
 				{
-					lock (this)
+					this.EnsureChildren();
+					int maxVisits = int.MinValue;
+					foreach (var child in this.children)
 					{
-						if (this._bestMove < 0)
+						if (maxVisits < child.Visits)
 						{
-							this.EnsureChildren();
-							int maxVisits = int.MinValue;
-							foreach (var child in this.children)
-							{
-								if (maxVisits < child._visits)
-								{
-									maxVisits = child._visits;
-									this._bestMove = child.ParentsMove;
-								}
-							}
+							maxVisits = child.Visits;
+							this._bestMove = child.ParentsMove;
 						}
 					}
 				}
@@ -64,9 +56,18 @@ namespace _2048.AI.MCTS
 
 		public int Visits { get { return this._visits; } }
 		private int _visits;
+		private static int _static_visits;
+		public int Score { get { return this._score; } }
+		private int _score;
 
 
-		public double WinRate { get { return (double)this._score / this._visits; } }
+		public double WinRate
+		{
+			get
+			{
+				return ((double)this._score / this._visits);
+			}
+		}
 
 
 		public double Bias
@@ -106,7 +107,7 @@ namespace _2048.AI.MCTS
 		private readonly int depth;
 
 
-		public MCTS(IMCTSGame game, int parentsMove = 0, MCTS parent = null)
+		public MCTS_backup(IMCTSGame game, int parentsMove = 0, MCTS_backup parent = null)
 		{
 			this.Game = game;
 			this.ParentsMove = parentsMove;
@@ -122,37 +123,30 @@ namespace _2048.AI.MCTS
 		}
 
 
-		bool Execute(out int score)
+		bool Execute()
 		{
-			score = 0;
-			if (this.Complete)
-				return false;
 			bool result = false;
-			if (Interlocked.CompareExchange(ref this._visits, 1, 0) == 0)
+			if (this.Visits == 0)
 			{
 				var gameClone = this.Game.Clone();
 				gameClone.RandomFinish();
 				result = true;
-				score = gameClone.Score;
-				Interlocked.Add(ref this._score, score);
+				this._score += gameClone.Score;
 			}
 			else
-			{
-				Interlocked.Increment(ref this._visits);
 				this.EnsureChildren();
-			}
 			if (0 < this.children.Count)
 			{
 				while (!result)
 				{
 					int unvisited = 0;
 					double maxUct = double.MinValue;
-					MCTS chosenChild = null;
+					MCTS_backup chosenChild = null;
 					foreach(var child in this.children)
 					{
 						if (!child.Complete)
 						{
-							if (child._visits == 0)
+							if (child.Visits == 0)
 							{
 								if (random.Next(unvisited++) == 0)
 									chosenChild = child;
@@ -166,8 +160,15 @@ namespace _2048.AI.MCTS
 					}
 					if (chosenChild == null)
 						break;
-					result = chosenChild.Execute(out score);
-					Interlocked.Add(ref this._score, score);
+					this._score -= chosenChild.Score;
+					try
+					{
+						result = chosenChild.Execute();
+					}
+					finally
+					{
+						this._score += chosenChild.Score;
+					}
 					if (!result && !chosenChild.Complete)
 						throw new InvalidOperationException(
 							"Node didn't execute and Complete is false."
@@ -176,11 +177,12 @@ namespace _2048.AI.MCTS
 			}
 			if (result)
 			{
+				this._visits += 1;
+				_static_visits += 1;
 				this._bestMove = -1;
 			}
 			else
 			{
-				Interlocked.Decrement(ref this._visits);
 				this._complete = true;
 			}
 			return result;
@@ -189,19 +191,11 @@ namespace _2048.AI.MCTS
 
 		public void Execute(int visits)
 		{
-			Parallel.For(this._visits, visits,
-				(visit, state) =>
-				{
-					if (this.Complete)
-						state.Break();
-					int score;
-					this.Execute(out score);
-				}
-			);
+			while (this.Visits < visits && this.Execute()) ;
 		}
 
 
-		public bool TryAutoMove(out MCTS newRoot)
+		public bool TryAutoMove(out MCTS_backup newRoot)
 		{
 			if (this.Game.IsAutoMovePossible)
 			{
@@ -217,7 +211,7 @@ namespace _2048.AI.MCTS
 		}
 
 
-		public bool TryMove(int iterations, out MCTS newRoot, bool preferAutoMove = true)
+		public bool TryMove(int iterations, out MCTS_backup newRoot, bool preferAutoMove = true)
 		{
 			if (preferAutoMove && this.TryAutoMove(out newRoot))
 				return true;
@@ -237,7 +231,7 @@ namespace _2048.AI.MCTS
 		}
 
 
-		private MCTS GetChildByMove(int move)
+		private MCTS_backup GetChildByMove(int move)
 		{
 			this.EnsureChildren();
 			foreach (var child in this.children)
@@ -255,25 +249,17 @@ namespace _2048.AI.MCTS
 		{
 			if (!this.childrenCreated)
 			{
-				lock (this.children)
+				this.childrenCreated = true;
+				for (int move = 0; move < this.Game.PossibleMoves; move++)
 				{
-					// multiple threads can get into the lock, only the first
-					// can create children
-					if (!this.childrenCreated)
+					var gameClone = this.Game.Clone();
+					bool moved;
+					do
 					{
-						for (int move = 0; move < this.Game.PossibleMoves; move++)
-						{
-							var gameClone = this.Game.Clone();
-							bool moved;
-							do
-							{
-								moved = gameClone.TryMove(move);
-								if (moved)
-									this.children.Add(new MCTS(gameClone, move, this));
-							} while (!moved && ++move < this.Game.PossibleMoves);
-						}
-						this.childrenCreated = true;
-					}
+						moved = gameClone.TryMove(move);
+						if (moved)
+							this.children.Add(new MCTS_backup(gameClone, move, this));
+					} while (!moved && ++move < this.Game.PossibleMoves);
 				}
 			}
 		}
@@ -285,8 +271,12 @@ namespace _2048.AI.MCTS
 				throw new ArgumentNullException("game");
 			if (iterations <= 0)
 				throw new ArgumentOutOfRangeException("iterations");
-			var root = new MCTS(game);
-			root.Execute(iterations);
+			var root = new MCTS_backup(game);
+			for (int count = 0; count < iterations; count++)
+			{
+				if (!root.Execute())
+					break;
+			}
 			return root.BestMove;
 		}
 

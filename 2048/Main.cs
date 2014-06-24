@@ -12,14 +12,19 @@ namespace _2048
 		public static void Main()
 		{
 			_2048RandomFinishPerformance(
-				TimeSpan.FromSeconds(0.1),
+				TimeSpan.FromSeconds(1),
+				() => new _2048Model_backup(),
+				"_2048Model_backup"
+			);
+			_2048RandomFinishPerformance(
+				TimeSpan.FromSeconds(1),
 				()=>new _2048Model(),
 				"_2048Model"
 			);
 			 
 			//Console.ReadLine();
 			
-			//_2048MCTS(100,10);
+			_2048MCTS(1000,10);
 			Console.ReadLine();
 		}
 
@@ -43,10 +48,14 @@ namespace _2048
 		{
 			var root = new MCTS(new _2048Model());
 			int counter = -1;
+			var stopWatch = new System.Diagnostics.Stopwatch();
+			stopWatch.Start();
 			while (!root.Complete)
 			{
 				if (++counter % log_modulus == 0)
 				{
+					Console.WriteLine(stopWatch.Elapsed);
+					stopWatch.Restart();
 					Console.WriteLine(string.Format("move: {0}", counter));
 					Console.WriteLine(string.Format("score: {0}", root.Game.Score));
 					Console.WriteLine(string.Format("missing visits: {0}", iterations - root.Visits));
