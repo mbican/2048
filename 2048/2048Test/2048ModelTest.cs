@@ -50,12 +50,14 @@ namespace _2048Test
 			Trace.Write(model.Matrix.ToDebugString(4));
 			Assert.AreEqual(2, model.Matrix[2, 3]);
 			Assert.AreEqual(2, model.Matrix[3, 0]);
+			Assert.AreEqual(0, model.Score);
 			Assert.IsTrue(model.MoveDown());
 			Trace.WriteLine("2:");
 			Trace.Write(model.Matrix.ToDebugString(4));
 			Assert.AreEqual(2, model.Matrix[0, 2]);
 			Assert.AreEqual(2, model.Matrix[3, 0]);
 			Assert.AreEqual(2, model.Matrix[3, 3]);
+			Assert.AreEqual(0, model.Score);
 			Assert.IsTrue(model.MoveDown());
 			Trace.WriteLine("3:");
 			Trace.Write(model.Matrix.ToDebugString(4));
@@ -63,6 +65,7 @@ namespace _2048Test
 			Assert.AreEqual(2, model.Matrix[3, 0]);
 			Assert.AreEqual(2, model.Matrix[3, 2]);
 			Assert.AreEqual(2, model.Matrix[3, 3]);
+			Assert.AreEqual(0, model.Score);
 			Assert.IsTrue(model.MoveDown());
 			Trace.WriteLine("4:");
 			Trace.Write(model.Matrix.ToDebugString(4));
@@ -70,6 +73,7 @@ namespace _2048Test
 			Assert.AreEqual(2, model.Matrix[3, 1]);
 			Assert.AreEqual(2, model.Matrix[3, 2]);
 			Assert.AreEqual(4, model.Matrix[3, 3]);
+			Assert.AreEqual(4, model.Score);
 			Assert.IsFalse(model.MoveDown());
 			Trace.WriteLine("5:");
 			Trace.Write(model.Matrix.ToDebugString(4));
@@ -77,12 +81,14 @@ namespace _2048Test
 			Assert.AreEqual(2, model.Matrix[3, 1]);
 			Assert.AreEqual(2, model.Matrix[3, 2]);
 			Assert.AreEqual(4, model.Matrix[3, 3]);
+			Assert.AreEqual(4, model.Score);
 			Assert.IsTrue(model.MoveRight());
 			Trace.WriteLine("6:");
 			Trace.Write(model.Matrix.ToDebugString(4));
 			Assert.AreEqual(2, model.Matrix[3, 1]);
 			Assert.AreEqual(4, model.Matrix[3, 2]);
 			Assert.AreEqual(4, model.Matrix[3, 3]);
+			Assert.AreEqual(8, model.Score);
 			Assert.IsTrue(model.MoveRight());
 			Trace.WriteLine("7:");
 			Trace.Write(model.Matrix.ToDebugString(4));
@@ -90,6 +96,7 @@ namespace _2048Test
 			Assert.AreEqual(2, model.Matrix[2, 1]);
 			Assert.AreEqual(2, model.Matrix[3, 2]);
 			Assert.AreEqual(8, model.Matrix[3, 3]);
+			Assert.AreEqual(16, model.Score);
 			Assert.IsTrue(model.MoveDown());
 			Trace.WriteLine("8:");
 			Trace.Write(model.Matrix.ToDebugString(4));
@@ -98,6 +105,7 @@ namespace _2048Test
 			Assert.AreEqual(2, model.Matrix[3, 1]);
 			Assert.AreEqual(2, model.Matrix[3, 2]);
 			Assert.AreEqual(8, model.Matrix[3, 3]);
+			Assert.AreEqual(16, model.Score);
 			Assert.IsFalse(model.MoveDown());
 			Trace.WriteLine("9:");
 			Trace.Write(model.Matrix.ToDebugString(4));
@@ -106,6 +114,7 @@ namespace _2048Test
 			Assert.AreEqual(2, model.Matrix[3, 1]);
 			Assert.AreEqual(2, model.Matrix[3, 2]);
 			Assert.AreEqual(8, model.Matrix[3, 3]);
+			Assert.AreEqual(16, model.Score);
 			Assert.IsTrue(model.MoveRight());
 			Trace.WriteLine("10:");
 			Trace.Write(model.Matrix.ToDebugString(4));
@@ -114,6 +123,7 @@ namespace _2048Test
 			Assert.AreEqual(4, model.Matrix[3, 1]);
 			Assert.AreEqual(4, model.Matrix[3, 2]);
 			Assert.AreEqual(8, model.Matrix[3, 3]);
+			Assert.AreEqual(20, model.Score);
 			Assert.IsTrue(model.MoveRight());
 			Trace.WriteLine("11:");
 			Trace.Write(model.Matrix.ToDebugString(4));
@@ -121,6 +131,7 @@ namespace _2048Test
 			Assert.AreEqual(4, model.Matrix[2, 3]);
 			Assert.AreEqual(8, model.Matrix[3, 2]);
 			Assert.AreEqual(8, model.Matrix[3, 3]);
+			Assert.AreEqual(32, model.Score);
 			Assert.IsTrue(model.MoveRight());
 			Trace.WriteLine("12:");
 			Trace.Write(model.Matrix.ToDebugString(4));
@@ -128,6 +139,7 @@ namespace _2048Test
 			Assert.AreEqual(4, model.Matrix[2, 3]);
 			Assert.AreEqual(2, model.Matrix[3, 0]);
 			Assert.AreEqual(16, model.Matrix[3, 3]);
+			Assert.AreEqual(48, model.Score);
 			Assert.IsTrue(model.MoveDown());
 			Trace.WriteLine("13:");
 			Trace.Write(model.Matrix.ToDebugString(4));
@@ -136,6 +148,7 @@ namespace _2048Test
 			Assert.AreEqual(4, model.Matrix[3, 1]);
 			Assert.AreEqual(2, model.Matrix[3, 2]);
 			Assert.AreEqual(16, model.Matrix[3, 3]);
+			Assert.AreEqual(48, model.Score);
 			Assert.IsTrue(model.MoveLeft());
 			Trace.WriteLine("14:");
 			Trace.Write(model.Matrix.ToDebugString(4));
@@ -145,6 +158,7 @@ namespace _2048Test
 			Assert.AreEqual(4, model.Matrix[3, 1]);
 			Assert.AreEqual(2, model.Matrix[3, 2]);
 			Assert.AreEqual(16, model.Matrix[3, 3]);
+			Assert.AreEqual(48, model.Score);
 			Assert.IsTrue(model.MoveRight());
 			Trace.WriteLine("15:");
 			Trace.Write(model.Matrix.ToDebugString(4));
