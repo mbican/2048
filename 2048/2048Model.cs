@@ -32,6 +32,8 @@ namespace _2048
 		private const int size_sq = size * size;
 		private const int startTiles = 2;
 		private readonly int[,] _matrix = new int[size, size];
+		private readonly Func<int, int, int>[] getters;
+		private readonly Action<int, int, int>[] setters;
 		private int? emptyTilesCount;
 
 		private Random random
@@ -70,6 +72,8 @@ namespace _2048
 
 		public _2048Model(int? randomSeed = null)
 		{
+			this.getters = this.CreateGetters();
+			this.setters = this.CreateSetters();
 			if (randomSeed.HasValue)
 				this._random = new Random(randomSeed.Value);
 
@@ -83,6 +87,8 @@ namespace _2048
 
 		public _2048Model(_2048Model model)
 		{
+			this.getters = this.CreateGetters();
+			this.setters = this.CreateSetters();
 			Array.Copy(model._matrix, this._matrix, size * size);
 			if (model._random != null)
 			{
@@ -263,135 +269,110 @@ namespace _2048
 
 		private Func<int, int, int> CreateValueGetter(_2048MoveDirection move)
 		{
-			switch (move)
-			{
-				case _2048MoveDirection.left:
-					return (rowIndex, colIndex) => this._matrix[
-						rowIndex,
-						colIndex
-					];
-				case _2048MoveDirection.right:
-					return (rowIndex, colIndex) => this._matrix[
+			return this.getters[(int)move];
+		}
+
+
+		private Func<int,int,int>[] CreateGetters()
+		{
+			return new Func<int, int, int>[]{
+				this.GetTransformedLeft,
+				this.GetTransformedRight,
+				this.GetTransformedUp,
+				this.GetTransformedDown
+			};
+
+		}
+
+
+		private int GetTransformedLeft(int rowIndex, int colIndex)
+		{
+			return this._matrix[
+				rowIndex,
+				colIndex
+			];
+		}
+
+
+		private int GetTransformedRight(int rowIndex, int colIndex)
+		{
+			return this._matrix[
 						size - rowIndex - 1,
 						size - colIndex - 1
 					];
-				case _2048MoveDirection.up:
-					return (rowIndex, colIndex) => this._matrix[
+		}
+
+
+		private int GetTransformedUp(int rowIndex, int colIndex)
+		{
+			return this._matrix[
 						colIndex,
 						rowIndex
 					];
-				case _2048MoveDirection.down:
-					return (rowIndex, colIndex) => this._matrix[
+		}
+
+
+		private int GetTransformedDown(int rowIndex, int colIndex)
+		{
+			return this._matrix[
 						size - colIndex - 1,
 						size - rowIndex - 1
 					];
-				default:
-					throw new ArgumentException(
-						string.Format(
-							"uknown _2048MoveDirection (value: {0})",
-							move
-						)
-					);
-			}
 		}
 
 
 		private Action<int, int, int> CreateValueSetter(_2048MoveDirection move)
 		{
-			switch (move)
-			{
-				case _2048MoveDirection.left:
-					return (rowIndex, colIndex, value) =>
-					{
-						this.__matrix = null;
-						this._matrix[
-							rowIndex,
-							colIndex
-						] = value;
-					};
-				case _2048MoveDirection.right:
-					return (rowIndex, colIndex, value) =>
-					{
-						this.__matrix = null;
-						this._matrix[
+			return this.setters[(int)move];
+		}
+
+
+		private Action<int, int, int>[] CreateSetters()
+		{
+			return new Action<int, int, int>[]{
+				this.SetTransformedLeft,
+				this.SetTransformedRight,
+				this.SetTransformedUp,
+				this.SetTransformedDown
+			};
+
+		}
+
+
+		private void SetTransformedLeft(int rowIndex, int colIndex, int value)
+		{
+			this.__matrix = null;
+			this._matrix[rowIndex, colIndex] = value;
+		}
+
+
+		private void SetTransformedRight(int rowIndex, int colIndex, int value)
+		{
+			this.__matrix = null;
+			this._matrix[
 							size - rowIndex - 1,
 							size - colIndex - 1
 						] = value;
-					};
-				case _2048MoveDirection.up:
-					return (rowIndex, colIndex, value) =>
-					{
-						this.__matrix = null;
-						this._matrix[
+		}
+
+
+		private void SetTransformedUp(int rowIndex, int colIndex, int value)
+		{
+			this.__matrix = null;
+			this._matrix[
 							colIndex,
 							rowIndex
 						] = value;
-					};
-				case _2048MoveDirection.down:
-					return (rowIndex, colIndex, value) =>
-					{
-						this.__matrix = null;
-						this._matrix[
+		}
+
+
+		private void SetTransformedDown(int rowIndex, int colIndex, int value)
+		{
+			this.__matrix = null;
+			this._matrix[
 							size - colIndex - 1,
 							size - rowIndex - 1
 						] = value;
-					};
-				default:
-					throw new ArgumentException(
-						string.Format(
-							"uknown _2048MoveDirection (value: {0})",
-							move
-						)
-					);
-			}
-		}
-
-
-		[Obsolete]
-		private Func<int, int, int> CreateNormalizedRowIndexGetter(_2048MoveDirection move)
-		{
-			switch (move)
-			{
-				case _2048MoveDirection.left:
-					return (rowIndex, columnIndex) => rowIndex;
-				case _2048MoveDirection.right:
-					return (rowIndex, columnIndex) => size - rowIndex - 1;
-				case _2048MoveDirection.up:
-					return (rowIndex, columnIndex) => columnIndex;
-				case _2048MoveDirection.down:
-					return (rowIndex, columnIndex) => size - columnIndex - 1;
-				default:
-					throw new ArgumentException(
-						string.Format(
-							"uknown _2048MoveDirection (value: {0})",
-							move
-						)
-					);
-			}
-		}
-
-
-		[Obsolete]
-		private Func<int, int, int> CreateNormalizedColumnIndexGetter(_2048MoveDirection move)
-		{
-			switch (move)
-			{
-				case _2048MoveDirection.left:
-					return (rowIndex, columnIndex) => columnIndex;
-				case _2048MoveDirection.right:
-					return (rowIndex, columnIndex) => size - columnIndex - 1;
-				case _2048MoveDirection.up:
-					return (rowIndex, columnIndex) => rowIndex;
-				case _2048MoveDirection.down:
-					return (rowIndex, columnIndex) => size - rowIndex - 1;
-				default:
-					throw new ArgumentException(
-						string.Format(
-							"uknown _2048MoveDirection (value: {0})",
-							move
-						)
-					);
-			}
 		}
 
 
