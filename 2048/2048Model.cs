@@ -239,7 +239,12 @@ namespace _2048
 						throw new InvalidOperationException(
 							"internal 2048Model error: empty tile wasn't found."
 						);
-					this.ResetEmptyTiles();
+					if (1 < this.emptyTilesCount.Value)
+					{
+						this._possibleMoves = 4;
+						this.emptyTilesCount = null;
+					}else
+						this.ResetEmptyTiles();
 					return true;
 				}
 				else
