@@ -260,8 +260,9 @@ namespace _2048
 		{
 			if (!this.IsAutoMovePossible)
 				throw new InvalidOperationException("auto move is not possible.");
-			var move = this.random.Next(this.emptyTilesCount.Value) * 2;
-			if (this.random.Next(10) == 0)
+			var rnd = this.random.Next(this.emptyTilesCount.Value * 10);
+			var move = (rnd / 10) * 2;
+			if (rnd % 10 == 0)
 				move += 1;
 			return move;
 		}
