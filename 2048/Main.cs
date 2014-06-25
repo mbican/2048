@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using _2048.AI.MCTS;
 
@@ -21,10 +22,20 @@ namespace _2048
 				()=>new _2048Model(),
 				"_2048Model"
 			);
-			 
+
+			_2048RandomFinishPerformanceParallel(
+				TimeSpan.FromSeconds(1),
+				() => new _2048Model_backup(),
+				"_2048Model_backup"
+			);
+			_2048RandomFinishPerformanceParallel(
+				TimeSpan.FromSeconds(1),
+				() => new _2048Model(),
+				"_2048Model"
+			);
 			//Console.ReadLine();
 			
-			_2048MCTS(1000,10);
+			//_2048MCTS(320000,1);
 			Console.ReadLine();
 		}
 
@@ -42,6 +53,36 @@ namespace _2048
 			}
 			stopWatch.Stop();
 			Console.WriteLine(string.Format("{3}.RandomFinish() in {2} sec.: {0} 1/s ({1} moves/s; {4} moves/game)", counter / timespan.TotalSeconds, moves / timespan.TotalSeconds, timespan.TotalSeconds,name, moves / counter));
+		}
+
+		static void _2048RandomFinishPerformanceParallel(TimeSpan timespan, Func<IMCTSGame> constructor, string name)
+		{
+			var stopWatch = new System.Diagnostics.Stopwatch();
+			stopWatch.Start();
+			int counter = 0;
+			int moves = 0;
+			Parallel.For(int.MinValue, int.MaxValue, () => Tuple.Create(0, 0),
+				(index, state, counters) =>
+				{
+					if (stopWatch.Elapsed >= timespan)
+						state.Break();
+					else
+					{
+						var model = constructor();
+						counters = Tuple.Create(
+							counters.Item1 + model.RandomFinish(),
+							counters.Item2 + 1
+						);
+					}
+					return counters;
+				}, (counters) =>
+				{
+					Interlocked.Add(ref counter, counters.Item2);
+					Interlocked.Add(ref moves, counters.Item1);
+				}
+			);
+			stopWatch.Stop();
+			Console.WriteLine(string.Format("{3}.RandomFinish() Parallel in {2} sec.: {0} 1/s ({1} moves/s; {4} moves/game)", counter / timespan.TotalSeconds, moves / timespan.TotalSeconds, timespan.TotalSeconds, name, moves / counter));
 		}
 
 		static void _2048MCTS(int iterations,int log_modulus)
