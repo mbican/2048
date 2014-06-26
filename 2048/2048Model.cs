@@ -36,18 +36,9 @@ namespace _2048
 		private readonly Action<int, int, int>[] setters;
 		private int? emptyTilesCount;
 
-		private Random random
-		{
-			get
-			{
-				if (this._random != null)
-					return this._random;
-				else
-					return _static_random;
-			}
-		}
-		private readonly Random _random;
-		private static readonly Random _static_random = new Random();
+		private readonly Random random;
+		[ThreadStatic]
+		private static Random static_random;
 
 
 		public int Score { get { return this._score; } }
@@ -72,10 +63,13 @@ namespace _2048
 
 		public _2048Model(int? randomSeed = null)
 		{
+			InitializeStaticRandom();
 			this.getters = this.CreateGetters();
 			this.setters = this.CreateSetters();
 			if (randomSeed.HasValue)
-				this._random = new Random(randomSeed.Value);
+				this.random = new Random(randomSeed.Value);
+			else
+				this.random = static_random;
 
 			for (var counter = 0; counter < startTiles; counter++)
 			{
@@ -87,19 +81,23 @@ namespace _2048
 
 		public _2048Model(_2048Model model)
 		{
+			InitializeStaticRandom();
 			this.getters = this.CreateGetters();
 			this.setters = this.CreateSetters();
 			Array.Copy(model._matrix, this._matrix, size * size);
-			if (model._random != null)
+			if (model.random != null)
 			{
 				var formatter = new BinaryFormatter();
 				using (Stream stream = new MemoryStream())
 				{
-					formatter.Serialize(stream, model._random);
+					formatter.Serialize(stream, model.random);
 					stream.Position = 0;
-					this._random = (Random)formatter.Deserialize(stream);
+					this.random = (Random)formatter.Deserialize(stream);
 				}
 			}
+			else
+				this.random = static_random;
+
 			this._score = model._score;
 			if (model.emptyTilesCount.HasValue)
 				this.SetEmptyTiles();
@@ -459,6 +457,16 @@ namespace _2048
 				return count;
 			}
 		}
+
+
+		private static void InitializeStaticRandom()
+		{
+			if (static_random == null)
+			{
+				static_random = new Random();
+			}
+		}
+
 
 	}
 

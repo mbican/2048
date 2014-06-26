@@ -28,7 +28,8 @@ namespace _2048.AI.MCTS
 		private bool childrenCreated;
 
 
-		private static Random random = new Random();
+		[ThreadStatic]
+		private static Random random;
 
 
 		public int BestMove 
@@ -109,6 +110,8 @@ namespace _2048.AI.MCTS
 
 		public MCTS_backup(IMCTSGame game, int parentsMove = 0, MCTS_backup parent = null)
 		{
+			if (random == null)
+				random = new Random();
 			this.Game = game;
 			this.ParentsMove = parentsMove;
 			this.parent = parent;

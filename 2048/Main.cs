@@ -62,10 +62,10 @@ namespace _2048
 			int counter = 0;
 			int moves = 0;
 			Parallel.For(int.MinValue, int.MaxValue, () => Tuple.Create(0, 0),
-				(index, state, counters) =>
+				(index, loop, counters) =>
 				{
 					if (stopWatch.Elapsed >= timespan)
-						state.Break();
+						loop.Break();
 					else
 					{
 						var model = constructor();

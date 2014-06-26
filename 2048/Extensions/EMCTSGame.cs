@@ -10,7 +10,18 @@ namespace _2048
 {
 	static class EMCTSGame
 	{
-		private static Random random = new Random();
+		private static Random random 
+		{ 
+			get 
+			{
+				if (_random == null)
+					_random = new Random();
+				return _random;
+			}
+		}
+
+		[ThreadStatic]
+		private static Random _random;
 
 	
 		/// <summary>
@@ -83,7 +94,7 @@ namespace _2048
 
 		public static void SeedRandom(int seed)
 		{
-			random = new Random(seed);
+			_random = new Random(seed);
 		}
 
 
