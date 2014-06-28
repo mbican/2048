@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace _2048.Statistics
@@ -9,18 +10,18 @@ namespace _2048.Statistics
 	/// <summary>
 	/// Thread safe class for incremental computation of mean, standard deviation,
 	/// sample standard deviation
-	/// </summary>
+	/// </summary>	
 	class StandardDeviation
 	{
 		// http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
 		private double q;
 
 
-		public long Count { get { return this._count; } }
+		public long Count { get { lock(this) return this._count; } }
 		private long _count;
 
 
-		public double Mean { get { return this._mean; } }
+		public double Mean { get { lock(this) return this._mean; } }
 		private double _mean;
 
 
@@ -55,11 +56,10 @@ namespace _2048.Statistics
 		private double? _sampleStandardDeviation;
 
 
-		public double Min { get { return this._min; } }
+		public double Min { get { lock(this) return this._min; } }
 		private double _min = double.PositiveInfinity;
 
-
-		public double Max { get { return this._max; } }
+		public double Max { get { lock(this) return this._max; } }
 		private double _max = double.NegativeInfinity;
 
 
@@ -103,7 +103,7 @@ namespace _2048.Statistics
 				var prevMean = this._mean;
 				this._count += value._count;
 				this._mean += (value._mean - this._mean) * value._count / this._count;
-				this.q += (
+				this.q += value._count * (value._mean - prevMean) * (value._mean - this._mean);
 				this._standardDeviation = null;
 				this._sampleStandardDeviation = null;
 				if (value._min < this._min)
