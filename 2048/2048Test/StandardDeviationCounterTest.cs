@@ -63,8 +63,8 @@ namespace _2048Test
 			var statistics = new[] { 1d, 3, 4 }.StandardDeviation();
 			Assert.AreEqual(3, statistics.Count);
 			Assert.IsTrue(statistics.Mean.NearlyEquals(2.7, 0.02));
-			Assert.IsTrue(statistics.StandardDeviation.NearlyEquals(1.24722, 0.000002));
-			Assert.IsTrue(statistics.SampleStandardDeviation.NearlyEquals(1.52753, 0.000002));
+			Assert.IsTrue(statistics.StandardDeviation.NearlyEquals(1.24722, 0.00005));
+			Assert.IsTrue(statistics.SampleStandardDeviation.NearlyEquals(1.52753, 0.00005));
 			var statistics2 = new StandardDeviationCounter();
 			statistics2.Add(1);
 			var statistics3 = new StandardDeviationCounter();
