@@ -15,13 +15,14 @@ namespace _2048.Statistics
 	{
 		// http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
 		private double q;
+		private Object _lock = new Object();
 
 
-		public long Count { get { lock(this) return this._count; } }
+		public long Count { get { lock(this._lock) return this._count; } }
 		private long _count;
 
 
-		public double Mean { get { lock(this) return this._mean; } }
+		public double Mean { get { lock(this._lock) return this._mean; } }
 		private double _mean;
 
 
@@ -29,7 +30,7 @@ namespace _2048.Statistics
 		{
 			get
 			{
-				lock (this)
+				lock (this._lock)
 				{
 					if (!this._standardDeviation.HasValue)
 						this._standardDeviation = Math.Sqrt(this.q / this._count);
@@ -44,7 +45,7 @@ namespace _2048.Statistics
 		{
 			get
 			{
-				lock (this)
+				lock (this._lock)
 				{
 					if (!this._sampleStandardDeviation.HasValue)
 						this._sampleStandardDeviation =
@@ -56,16 +57,35 @@ namespace _2048.Statistics
 		private double? _sampleStandardDeviation;
 
 
-		public double Min { get { lock(this) return this._min; } }
+		public double Min { get { lock(this._lock) return this._min; } }
 		private double _min = double.PositiveInfinity;
 
-		public double Max { get { lock(this) return this._max; } }
+
+		public double Max { get { lock(this._lock) return this._max; } }
 		private double _max = double.NegativeInfinity;
+
+
+		public StandardDeviation() { }
+
+
+		public StandardDeviation(StandardDeviation initialValue)
+		{
+			if (initialValue == null)
+				throw new ArgumentNullException("initialValue");
+			lock (initialValue._lock)
+			{
+				this._count = initialValue._count;
+				this._mean = initialValue._mean;
+				this.q = initialValue.q;
+				this._min = initialValue._min;
+				this._max = initialValue._max;
+			}
+		}
 
 
 		public void Add(double value)
 		{
-			lock (this)
+			lock (this._lock)
 			{
 				var prevMean = this._mean;
 				// http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
@@ -85,7 +105,7 @@ namespace _2048.Statistics
 		{
 			if (values == null)
 				throw new ArgumentNullException("values");
-			lock (this)
+			lock (this._lock)
 			{
 				foreach (var value in values)
 					this.Add(value);
@@ -97,7 +117,7 @@ namespace _2048.Statistics
 		{
 			if (value == null)
 				throw new ArgumentNullException("value");
-			lock (this)
+			lock (this._lock)
 			{
 				var prevCount = this._count;
 				var prevMean = this._mean;
@@ -111,6 +131,12 @@ namespace _2048.Statistics
 				if (this._max < value._max)
 					this._max = value._max;
 			}
+		}
+
+
+		public StandardDeviation Clone()
+		{
+			return new StandardDeviation(this);
 		}
 	}
 }
