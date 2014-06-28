@@ -50,12 +50,14 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="EDoubleTest.cs" />
     <Compile Include="MCTSTest.cs" />
     <Compile Include="MatrixTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="2048ModelTest.cs" />
+    <Compile Include="StandardDeviationCounterTest.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -73,6 +73,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="2048Model_backup.cs" />
+    <Compile Include="Extensions\EDouble.cs" />
     <Compile Include="Extensions\EMCTSGame.cs" />
     <Compile Include="Extensions\EElement.cs" />
     <Compile Include="Extensions\EMatrix.cs" />
@@ -121,6 +122,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Statistics\StandardDeviation.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Extensions\EEnumerable.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
