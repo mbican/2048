@@ -65,9 +65,14 @@
     <Compile Include="2048Model.cs" />
     <Compile Include="2048MoveDirection.cs" />
     <Compile Include="AI\ANN\IANNGame.cs" />
+    <Compile Include="AI\MCTS\ChildNode[T].cs" />
+    <Compile Include="AI\MCTS\EMCTS.cs" />
+    <Compile Include="AI\MCTS\GameNode.cs" />
+    <Compile Include="AI\MCTS\INode[T].cs" />
     <Compile Include="AI\MCTS\MCTS_backup.cs" />
     <Compile Include="AI\MCTS\IMCTSGame.cs" />
     <Compile Include="AI\MCTS\MCTS.cs" />
+    <Compile Include="AI\MCTS\RangeNode.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>

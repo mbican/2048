@@ -200,5 +200,19 @@ namespace _2048.Statistics
 				this._min.GetHashCode() ^
 				this._max.GetHashCode();
 		}
+
+
+		public override string ToString()
+		{
+			lock(this._lock) 
+				return string.Format(
+					"{0}±{1} (count: {2}; min: {3}; max: {4})", 
+					this.Mean, 
+					this.StandardDeviation, 
+					this.Count, 
+					this.Min, 
+					this.Max
+				);
+		}
 	}
 }

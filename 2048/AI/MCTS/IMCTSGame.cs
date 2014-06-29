@@ -11,7 +11,8 @@ namespace _2048.AI.MCTS
 		/// <summary>
 		/// Score of the end state of the game. Higher is better. Will be read
 		/// only if <see cref="PossibleMoves"/> is 0 (in the end of the game).
-		/// Possible implementation: -1: you lost; 0: draw; 1: you won.
+		/// Must not be negative!
+		/// Possible implementation: 0: you lost; 1: draw; 2: you won.
 		/// </summary>
 		int Score { get; }
 
