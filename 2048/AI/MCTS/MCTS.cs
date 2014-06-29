@@ -125,82 +125,21 @@ namespace _2048.AI.MCTS
 		}
 
 
-		bool Execute(out int score)
-		{
-			score = 0;
-			if (this.Complete)
-				return false;
-			bool result = false;
-			if (Interlocked.CompareExchange(ref this._visits, 1, 0) == 0)
-			{
-				var gameClone = this.Game.Clone();
-				gameClone.RandomFinish();
-				result = true;
-				score = gameClone.Score;
-				Interlocked.Add(ref this._score, score);
-			}
-			else
-			{
-				Interlocked.Increment(ref this._visits);
-				this.EnsureChildren();
-			}
-			if (0 < this.children.Count)
-			{
-				while (!result)
-				{
-					int unvisited = 0;
-					double maxUct = double.MinValue;
-					MCTS chosenChild = null;
-					foreach(var child in this.children)
-					{
-						if (!child.Complete)
-						{
-							if (child._visits == 0)
-							{
-								if (random.Next(unvisited++) == 0)
-									chosenChild = child;
-							}
-							else if (unvisited == 0 && maxUct < child.Uct)
-							{
-								maxUct = child.Uct;
-								chosenChild = child;
-							}
-						}
-					}
-					if (chosenChild == null)
-						break;
-					result = chosenChild.Execute(out score);
-					Interlocked.Add(ref this._score, score);
-					if (!result && !chosenChild.Complete)
-						throw new InvalidOperationException(
-							"Node didn't execute and Complete is false."
-						);
-				}
-			}
-			if (result)
-			{
-				this._bestMove = -1;
-			}
-			else
-			{
-				Interlocked.Decrement(ref this._visits);
-				this._complete = true;
-			}
-			return result;
-		}
-
-
 		public void Execute(int visits)
 		{
-			Parallel.For(this._visits, visits,
-				(visit, state) =>
-				{
-					if (this.Complete)
-						state.Break();
-					int score;
-					this.Execute(out score);
-				}
-			);
+			int score;
+			while (this._visits < visits && !this.Complete)
+				this.Execute(out score);
+/*
+				Parallel.For(this._visits, visits,
+					(visit, state) =>
+					{
+						if (this.Complete)
+							state.Break();
+						int score;
+						this.Execute(out score);
+					}
+				);*/
 		}
 
 
@@ -237,6 +176,84 @@ namespace _2048.AI.MCTS
 				newRoot.parent = null;
 				return true;
 			}
+		}
+
+		private const string indent_str = "   ";
+		public Lazy<string> DumpDebugInfo(int depth=2,int indent=0,StringBuilder result = null)
+		{
+			if (result == null)
+				result = new StringBuilder();
+			for (int i = 0; i < indent; ++i)
+			{
+				result.Append(indent_str);
+				result.AppendFormat("move: {0}; id: {1}", this.ParentsMove, this.ToString());
+			}
+			return new Lazy<string>(result.ToString);
+		}
+
+
+		private bool Execute(out int score)
+		{
+			score = 0;
+			if (this.Complete)
+				return false;
+			bool result = false;
+			if (Interlocked.CompareExchange(ref this._visits, 1, 0) == 0)
+			{
+				var gameClone = this.Game.Clone();
+				gameClone.RandomFinish();
+				result = true;
+				score = gameClone.Score;
+				Interlocked.Add(ref this._score, score);
+			}
+			else
+			{
+				Interlocked.Increment(ref this._visits);
+				this.EnsureChildren();
+			}
+			if (0 < this.children.Count)
+			{
+				while (!result)
+				{
+					int unvisited = 0;
+					double maxUct = double.MinValue;
+					MCTS chosenChild = null;
+					foreach (var child in this.children)
+					{
+						if (!child.Complete)
+						{
+							if (child._visits == 0)
+							{
+								if (random.Next(unvisited++) == 0)
+									chosenChild = child;
+							}
+							else if (unvisited == 0 && maxUct < child.Uct)
+							{
+								maxUct = child.Uct;
+								chosenChild = child;
+							}
+						}
+					}
+					if (chosenChild == null)
+						break;
+					result = chosenChild.Execute(out score);
+					Interlocked.Add(ref this._score, score);
+					if (!result && !chosenChild.Complete)
+						throw new InvalidOperationException(
+							"Node didn't execute and Complete is false."
+						);
+				}
+			}
+			if (result)
+			{
+				this._bestMove = -1;
+			}
+			else
+			{
+				Interlocked.Decrement(ref this._visits);
+				this._complete = true;
+			}
+			return result;
 		}
 
 

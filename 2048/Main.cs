@@ -35,7 +35,7 @@ namespace _2048
 			);
 			//Console.ReadLine();
 			
-			//_2048MCTS(320000,1);
+			_2048MCTS(320000,1);
 			Console.ReadLine();
 		}
 
