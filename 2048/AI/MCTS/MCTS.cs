@@ -24,8 +24,8 @@ namespace _2048.AI.MCTS
 
 
 		private bool childrenCreated;
-		private readonly Statistics.StandardDeviationCounter score = 
-			new Statistics.StandardDeviationCounter();
+		private readonly Statistics.IStatistics score = 
+			new Statistics.StatisticsTSLock();
 
 
 		[ThreadStatic]

@@ -16,7 +16,7 @@ namespace _2048.Statistics
 	/// Thread safe class for incremental computation of mean, standard deviation,
 	/// sample standard deviation
 	/// </summary>	
-	class StandardDeviationCounter
+	class StatisticsTSLock : IStatistics
 	{
 		// http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
 		private double q;
@@ -70,16 +70,16 @@ namespace _2048.Statistics
 		private double _max = double.NegativeInfinity;
 
 
-		public StandardDeviationCounter() { }
+		public StatisticsTSLock() { }
 
 
-		public StandardDeviationCounter(IEnumerable<double> initialValues)
+		public StatisticsTSLock(IEnumerable<double> initialValues)
 		{
 			this.Add(initialValues);
 		}
 
 
-		public StandardDeviationCounter(StandardDeviationCounter initialValue)
+		public StatisticsTSLock(StatisticsTSLock initialValue)
 		{
 			if (initialValue == null)
 				throw new ArgumentNullException("initialValue");
@@ -124,7 +124,16 @@ namespace _2048.Statistics
 		}
 
 
-		public void Add(StandardDeviationCounter value)
+		void IStatistics.Add(IStatistics value)
+		{
+			if (value is StatisticsTSLock)
+				this.Add((StatisticsTSLock)value);
+			else
+				throw new NotImplementedException();
+		}
+
+
+		public void Add(StatisticsTSLock value)
 		{
 			if (value == null)
 				throw new ArgumentNullException("value");
@@ -153,10 +162,16 @@ namespace _2048.Statistics
 			}
 		}
 
-
-		public StandardDeviationCounter Clone()
+		
+		IStatistics IStatistics.Clone()
 		{
-			return new StandardDeviationCounter(this);
+			return this.Clone();
+		}
+
+
+		public StatisticsTSLock Clone()
+		{
+			return new StatisticsTSLock(this);
 		}
 
 
@@ -165,7 +180,7 @@ namespace _2048.Statistics
 		/// </summary>
 		/// <param name="epsilon">maximum allowed relative error (e.g. 0.01 for 1% accurancy)</param>
 		/// <returns>True if two objects are equal; false otherwise.</returns>
-		public bool NearlyEquals(StandardDeviationCounter other, double epsilon = EDouble.RELATIVE_EPSILON)
+		public bool NearlyEquals(StatisticsTSLock other, double epsilon = EDouble.RELATIVE_EPSILON)
 		{
 			if (other == null)
 				return false;
@@ -179,9 +194,9 @@ namespace _2048.Statistics
 
 		public override bool Equals(object obj)
 		{
-			if (obj is StandardDeviationCounter)
+			if (obj is StatisticsTSLock)
 			{
-				var other = (StandardDeviationCounter)obj;
+				var other = (StatisticsTSLock)obj;
 				return this._count == other._count &&
 					this._mean == other._mean &&
 					this.q == other.q &&
