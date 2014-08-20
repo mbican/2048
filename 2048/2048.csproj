@@ -82,6 +82,7 @@
     <Compile Include="Extensions\EMCTSGame.cs" />
     <Compile Include="Extensions\EElement.cs" />
     <Compile Include="Extensions\EMatrix.cs" />
+    <Compile Include="Extensions\EStatistics.cs" />
     <Compile Include="Matrix\Element.cs" />
     <Compile Include="Matrix\IMatrix.cs" />
     <Compile Include="MainWindow.xaml.cs">
@@ -126,7 +127,9 @@
     <Compile Include="Main.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Statistics\StandardDeviation.cs" />
+    <Compile Include="Statistics\StatisticsTSLock.cs" />
+    <Compile Include="Statistics\IStatistics.cs" />
+    <Compile Include="Statistics\Statistics.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\EEnumerable.cs" />

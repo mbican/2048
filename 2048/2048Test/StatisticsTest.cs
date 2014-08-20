@@ -4,19 +4,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using _2048;
 using _2048.Statistics;
 
 namespace _2048Test
 {
 	[TestClass]
-	public class StandardDeviationCounterTest
+	public class StatisticsTest
 	{
 		[TestMethod]
 		public void StandardDeviationPredefinedValuesTest1()
 		{
 			List<double> values = new List<double>(){1,2};
-			var statistics = values.StandardDeviation();
+			var statistics = values.Statistics();
 			Assert.AreEqual(2, statistics.Count);
 			Assert.AreEqual(1, statistics.Min);
 			Assert.AreEqual(2, statistics.Max);
@@ -30,7 +31,7 @@ namespace _2048Test
 			Assert.AreEqual(1.5, statistics.Mean);
 			Assert.AreEqual(0.5, statistics.StandardDeviation);
 			Assert.AreEqual(Math.Sqrt(1d/3), statistics.SampleStandardDeviation);
-			var statistics2 = new[] { 3d, 4 }.StandardDeviation();
+			var statistics2 = new[] { 3d, 4 }.Statistics();
 			Assert.AreEqual(2, statistics2.Count);
 			Assert.AreEqual(3, statistics2.Min);
 			Assert.AreEqual(4, statistics2.Max);
@@ -60,19 +61,19 @@ namespace _2048Test
 		[TestMethod]
 		public void StandardDeviationPredefinedValuesTest2()
 		{
-			var statistics = new[] { 1d, 3, 4 }.StandardDeviation();
+			var statistics = new[] { 1d, 3, 4 }.Statistics();
 			Assert.AreEqual(3, statistics.Count);
 			Assert.IsTrue(statistics.Mean.NearlyEquals(2.7, 0.02));
 			Assert.IsTrue(statistics.StandardDeviation.NearlyEquals(1.24722, 0.00005));
 			Assert.IsTrue(statistics.SampleStandardDeviation.NearlyEquals(1.52753, 0.00005));
-			var statistics2 = new StandardDeviationCounter();
+			IStatistics statistics2 = new Statistics();
 			statistics2.Add(1);
-			var statistics3 = new StandardDeviationCounter();
+			IStatistics statistics3 = new Statistics();
 			statistics3.Add(3);
 			statistics2.Add(statistics3);
-			statistics3 = new StandardDeviationCounter();
+			statistics3 = new Statistics();
 			statistics3.Add(4);
-			var statistics4 = statistics3.Clone();
+			IStatistics statistics4 = statistics3.Clone();
 			statistics4.Add(statistics2);
 			Assert.IsTrue(statistics4.NearlyEquals(statistics));
 			statistics2.Add(statistics3);
@@ -90,16 +91,16 @@ namespace _2048Test
 			{
 				list.Add(rand.NextDouble());
 			}
-			var statistics1 = list.StandardDeviation();
-			var statistics2 = new StandardDeviationCounter();
+			var statistics1 = list.Statistics();
+			var statistics2 = new Statistics();
 			Parallel.ForEach(
 				list,
 				(e) => statistics2.Add(e)
 			);
-			var statistics3 = new StandardDeviationCounter();
+			var statistics3 = new Statistics();
 			Parallel.ForEach(
 				list,
-				() => new StandardDeviationCounter(),
+				() => new Statistics(),
 				(e, loop, counter) =>
 				{
 					counter.Add(e);
@@ -113,8 +114,8 @@ namespace _2048Test
 			do
 			{
 				int counter = 0;
-				var statistics4 = new StandardDeviationCounter();
-				var temp_statistics = new StandardDeviationCounter();
+				var statistics4 = new Statistics();
+				var temp_statistics = new Statistics();
 				foreach (var e in list)
 				{
 					temp_statistics.Add(e);
@@ -122,12 +123,40 @@ namespace _2048Test
 					{
 						counter = 0;
 						statistics4.Add(temp_statistics);
-						temp_statistics = new StandardDeviationCounter();
+						temp_statistics = new Statistics();
 					}
 				}
 				statistics4.Add(temp_statistics);
 				Assert.IsTrue(statistics1.NearlyEquals(statistics4));
 			} while ((group *= 2) < elements);
 		}
+
+
+		[TestMethod]
+		public void StatisticsPerformance()
+		{
+			Debug.WriteLine(string.Format("Stopwatch.IsHighResolution: {0}", Stopwatch.IsHighResolution));
+			Debug.WriteLine(string.Format("Stopwatch.Frequency: {0} Hz", Stopwatch.Frequency));
+			var time = AddRandom(new StatisticsTSLock(), 10000000L);
+			Debug.WriteLine(string.Format("StatisticsTSLock 1e7 {0}; {1} Hz", time, 1e7 / time.TotalSeconds));
+			time = AddRandom(new Statistics(), 10000000L);
+			Debug.WriteLine(string.Format("Statistics 1e7 {0}; {1} Hz", time, 1e7 / time.TotalSeconds));
+		}
+
+
+		TimeSpan AddRandom(IStatistics statistics, long count)
+		{
+			var rand = new Random();
+			var watch = new Stopwatch();
+			while (0 < count--)
+			{
+				var value = rand.NextDouble();
+				watch.Start();
+				statistics.Add(value);
+				watch.Stop();
+			}
+			return watch.Elapsed;
+		}
+
 	}
 }

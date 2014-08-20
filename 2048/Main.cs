@@ -169,8 +169,8 @@ namespace _2048
 			);
 			root.Execute(visits);
 			var bestBiasExponent = Math.Pow(2, c * root.GetBestLeaf().Node.Middle);
-			var statistics = new Statistics.StandardDeviationCounter();
-			Parallel.For(0, visits/4, () => new Statistics.StandardDeviationCounter(),
+			var statistics = new Statistics.Statistics();
+			Parallel.For(0, visits/4, () => new Statistics.Statistics(),
 				(i, loop, _statistics) =>
 				{
 					var _2048Root2 = new MCTS<GameNode>(

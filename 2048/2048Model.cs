@@ -79,6 +79,23 @@ namespace _2048
 		}
 
 
+		public _2048Model(int[,] matrix, int? randomSeed = null): this(randomSeed)
+		{
+			if (matrix == null)
+				throw new ArgumentNullException("matrix");
+			if (matrix.Rank != 2 || matrix.GetLength(0) != size || matrix.GetLength(1) != size)
+				throw new ArgumentException("matrix has wrong number of elements","matrix");
+			for (int row = 0; row < size; ++row)
+			{
+				for (int col = 0; col < size; ++col)
+				{
+					this._matrix[row, col] = matrix[row, col];
+				}
+			}
+			this.ResetEmptyTiles(force: true);
+		}
+
+
 		public _2048Model(_2048Model model)
 		{
 			InitializeStaticRandom();
@@ -202,6 +219,7 @@ namespace _2048
 			}
 			if (moved)
 			{
+				this.__matrix = null;
 				this.SetEmptyTiles();
 				return !autoAddTile || this.TryAutoAddTile();
 			}

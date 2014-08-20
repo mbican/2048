@@ -17,7 +17,7 @@ namespace _2048Test
 			var moves = model.RandomFinish();
 			Trace.Write(model.Matrix.ToDebugString(5));
 			Assert.IsFalse(model.IsAutoMovePossible);
-			Assert.AreEqual(0,model.PossibleMoves); 
+			Assert.AreEqual(0, model.PossibleMoves);
 			Assert.IsFalse(model.Matrix.TraverseByRows().Any((v) => v.Value == 0));
 		}
 
@@ -292,7 +292,7 @@ namespace _2048Test
 			var a = "ahoj";
 		}
 
-	
+
 		[TestMethod]
 		public void _2048ModelCloneTest()
 		{
@@ -405,5 +405,20 @@ namespace _2048Test
 		}
 
 
+		[TestMethod]
+		public void _2048ModelTest4()
+		{
+			var model = new _2048Model(new int[4, 4] { { 8, 256, 4, 2 }, { 512, 64, 32, 8 }, { 4, 128, 4, 16 }, { 4, 4096, 2, 4 } });
+			Assert.AreEqual(4, model.PossibleMoves);
+			model = new _2048Model(new int[4, 4] { { 0, 8, 256, 4 }, { 512, 64, 32, 8 }, { 4, 128, 4, 16 }, { 4, 4096, 2, 4 } });
+			Assert.AreEqual(4, model.PossibleMoves);
+			Assert.IsTrue(model.TryMove(_2048MoveDirection.left,autoAddTile:false));
+			Assert.AreEqual(2, model.PossibleMoves);
+			Assert.IsTrue(model.TryMove(0));
+			Assert.AreEqual(4, model.PossibleMoves);
+			Assert.IsTrue(model.TryMove(_2048MoveDirection.up, autoAddTile: false));
+			Assert.IsTrue(model.TryMove(0));
+			Assert.AreEqual(0, model.PossibleMoves);
+		}
 	}
 }
