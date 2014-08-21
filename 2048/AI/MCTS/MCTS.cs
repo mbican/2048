@@ -26,7 +26,7 @@ namespace _2048.AI.MCTS
 
 		private bool childrenCreated;
 		private bool skipLevelsHandled;
-		private readonly Statistics.IStatistics score =
+		private readonly Statistics.StatisticsTSLock score =
 			new Statistics.StatisticsTSLock();
 
 
@@ -72,40 +72,51 @@ namespace _2048.AI.MCTS
 
 
 		public MCTS(T root, double biasExponent = 0.5, int skipLevels = 1)
-		{
+		{ // random is ThreadStatic so we must initialize it
+		  // for each thread
 			if (random == null)
 				random = new Random();
 			this.Node = root;
 			this.biasExponent = biasExponent;
 			this.skipLevels = skipLevels;
+			if (this.skipLevels <= 0)
+				this.skipLevelsHandled = true;
 		}
 
 
-		public void Execute(int visits)
+		public void Execute(int visits, bool parallel = true)
 		{
-			/*
-			int score;
-			while (this._visits < visits && !this.Complete)
-				this.Execute(out score);
-			 */
-			int threadId = 0;
-			Parallel.For(this._visits, visits,
-				() =>
-				{
-					if (random == null)
-						random = new Random((int)DateTime.UtcNow.Ticks ^ (Interlocked.Increment(ref threadId) << 16));
-					return 0;
-				},
-				(visit, loop, dummy) =>
-				{
-					if (this.Complete)
-						loop.Break();
-					double score;
+			if (parallel)
+			{
+				int threadId = 0;
+				Parallel.For(this._visits, visits,
+					() =>
+					{ // random is ThreadStatic so we must initialize it
+					  // for each thread
+						if (random == null)
+							random = new Random(
+								(int)DateTime.UtcNow.Ticks ^ 
+									(Interlocked.Increment(ref threadId) * 251)
+							);
+						return 0;
+					},
+					(visit, loop, dummy) =>
+					{
+						if (this._complete)
+							loop.Break();
+						double score;
+						this.Execute(out score);
+						return dummy;
+					},
+					(dummy) => { }
+				);
+			}
+			else
+			{
+				double score;
+				while (this._visits < visits && !this._complete)
 					this.Execute(out score);
-					return dummy;
-				},
-				(dummy) => { }
-			);
+			}
 		}
 
 
@@ -113,40 +124,47 @@ namespace _2048.AI.MCTS
 		{
 			score = 0;
 			bool result = false;
-			if (this.Complete)
+			if (this._complete)
 				return false;
-			else if (this.TryHandleSkipLevels(out score))
-			{
-				if (score < 0)
-					throw new ArgumentOutOfRangeException(
-						"IMCTSGame.Score must not be negative."
-					);
-				result = true;
-			}
-			else if (Interlocked.CompareExchange(ref this._visits, 1, 0) == 0)
-			{
-				result = true;
-				score = this.Node.Value;
-				if (score < 0)
-					throw new ArgumentOutOfRangeException(
-						"IMCTSGame.Score must not be negative."
-					);
-			}
-			else
+			else if (!this.skipLevelsHandled)
 			{
 				Interlocked.Increment(ref this._visits);
-				while (!result)
+				if (this.TryHandleSkipLevels(out score))
 				{
-					MCTS<T> chosenChild;
-					if (!TryChooseChildForExecute(out chosenChild))
-						break;
-					result = chosenChild.Execute(out score);
-					if (!result && !chosenChild.Complete)
-						throw new InvalidOperationException(
-							"Node didn't execute and Complete is false."
+					if (score < 0)
+						throw new ArgumentOutOfRangeException(
+							"IMCTSGame.Score must not be negative."
+						);
+					result = true;
+				}
+				else
+					Interlocked.Decrement(ref this._visits);
+			}
+			if (!result)
+				if ( Interlocked.CompareExchange(ref this._visits, 1, 0) == 0)
+				{
+					result = true;
+					score = this.Node.Value;
+					if (score < 0)
+						throw new ArgumentOutOfRangeException(
+							"IMCTSGame.Score must not be negative."
 						);
 				}
-			}
+				else
+				{
+					Interlocked.Increment(ref this._visits);
+					while (!result)
+					{
+						MCTS<T> chosenChild;
+						if (!TryChooseChildForExecute(out chosenChild))
+							break;
+						result = chosenChild.Execute(out score);
+						if (!result && !chosenChild.Complete)
+							throw new InvalidOperationException(
+								"Node didn't execute and Complete is false."
+							);
+					}
+				}
 
 
 			if (result)
@@ -175,7 +193,7 @@ namespace _2048.AI.MCTS
 				{
 					MCTS<T> chosenChild;
 					if (!TryChooseChildForExecute(out chosenChild) ||
-						0 < chosenChild.Visits
+						0 < chosenChild._visits
 					)
 						return this.HandleSkipLevelsFailed(out score);
 					else
@@ -207,20 +225,24 @@ namespace _2048.AI.MCTS
 		{
 			this.EnsureChildren();
 			int unvisited = 0;
-			double maxUct = double.MinValue;
+			double maxUct = double.NegativeInfinity;
 			chosenChild = null;
+			var visits = this._visits;
 			foreach (var child in this._children)
 			{
-				if (!child.Complete)
+				if (!child._complete)
 				{
+					double childUCT;
 					if (child._visits == 0)
 					{
 						if (random.Next(++unvisited) == 0)
 							chosenChild = child;
 					}
-					else if (unvisited == 0 && maxUct < child.GetUct(this._visits))
+					else if (unvisited == 0 && maxUct <
+						((childUCT = child.GetUct(visits))) 
+					)
 					{
-						maxUct = child.GetUct(this._visits);
+						maxUct = childUCT;
 						chosenChild = child;
 					}
 				}
@@ -258,9 +280,12 @@ namespace _2048.AI.MCTS
 					// can create children
 					if (!this.childrenCreated)
 					{
+						var childrenSkipLevels = this.skipLevels;
+						if (0 < childrenSkipLevels)
+							childrenSkipLevels--;
 						foreach (var child in this.Node.Children)
 						{
-							this._children.Add(new MCTS<T>(child.Node, this.biasExponent));
+							this._children.Add(new MCTS<T>(child.Node, this.biasExponent,childrenSkipLevels));
 						}
 						this.childrenCreated = true;
 					}
@@ -274,6 +299,19 @@ namespace _2048.AI.MCTS
 			random = new Random(seed);
 			EMCTSGame.SeedRandom(seed);
 			EEnumerable.SeedRandom(seed);
+		}
+	}
+
+
+	class MCTS
+	{
+		public static MCTS<T> Create<T>(
+			T root, 
+			double biasExponent = 0.5, 
+			int skipLevels = 1
+		) where T : INode<double,T>
+		{
+			return new MCTS<T>(root, biasExponent, skipLevels);
 		}
 	}
 }

@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using _2048.DesignPatterns;
 
 #if DEBUG
 [assembly: InternalsVisibleTo("2048Test")]
@@ -184,11 +185,13 @@ namespace _2048.Statistics
 		{
 			if (other == null)
 				return false;
-			return this._count == other._count &&
-				this._mean.NearlyEquals(other._mean, epsilon) &&
-				this.q.NearlyEquals(other.q, epsilon) &&
-				this._min == other._min &&
-				this._max == other._max;
+			lock(this._lock)
+				lock(other._lock)
+					return this._count == other._count &&
+						this._mean.NearlyEquals(other._mean, epsilon) &&
+						this.q.NearlyEquals(other.q, epsilon) &&
+						this._min == other._min &&
+						this._max == other._max;
 		}
 
 
@@ -197,11 +200,13 @@ namespace _2048.Statistics
 			if (obj is StatisticsTSLock)
 			{
 				var other = (StatisticsTSLock)obj;
-				return this._count == other._count &&
-					this._mean == other._mean &&
-					this.q == other.q &&
-					this._min == other._min &&
-					this._max == other._max;
+				lock(this._lock)
+					lock(other._lock)
+						return this._count == other._count &&
+							this._mean == other._mean &&
+							this.q == other.q &&
+							this._min == other._min &&
+							this._max == other._max;
 			}
 			return base.Equals(obj);
 		}
@@ -209,11 +214,12 @@ namespace _2048.Statistics
 
 		public override int GetHashCode()
 		{
-			return this._count.GetHashCode() ^
-				this._mean.GetHashCode() ^
-				this.q.GetHashCode() ^
-				this._min.GetHashCode() ^
-				this._max.GetHashCode();
+			lock(this._lock)
+				return this._count.GetHashCode().
+					MergeHashCode(this._mean.GetHashCode()).
+					MergeHashCode(this.q.GetHashCode()).
+					MergeHashCode(this._min.GetHashCode()).
+					MergeHashCode(this._max.GetHashCode());
 		}
 
 
@@ -228,6 +234,13 @@ namespace _2048.Statistics
 					this.Min, 
 					this.Max
 				);
+		}
+
+
+		public IDisposable Lock()
+		{
+			Monitor.Enter(this._lock);
+			return new Disposable(() => Monitor.Exit(this._lock));
 		}
 	}
 }
