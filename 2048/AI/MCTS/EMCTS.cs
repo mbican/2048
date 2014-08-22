@@ -86,18 +86,14 @@ namespace _2048
 
 		public static MCTS<T> GetBestLeaf<T>(this MCTS<T> root) where T : INode<double,T>
 		{
-			int visits = int.MinValue + 1;
-			while (0 < root.Visits && 0 < root.Children.Count && int.MinValue < visits)
+			while (1 < root.Visits && 0 < root.Children.Count)
 			{
-				visits = int.MinValue;
-				foreach (var child in root.Children)
-				{
-					if (visits < child.Visits && 0 < child.Visits)
+				root = root.Children.Max(
+					(x, y) =>
 					{
-						visits = child.Visits;
-						root = child;
+						return x.Node.Value.CompareTo(y.Node.Value);
 					}
-				}
+				);
 			}
 			return root;
 		}

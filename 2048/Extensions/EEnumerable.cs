@@ -59,7 +59,7 @@ namespace _2048
 				return result;
 		}
 
-	
+
 		/// <summary>
 		/// Randomly chooses one element or default value 
 		/// if <paramref name="source"/> collection is empty.
@@ -94,6 +94,57 @@ namespace _2048
 			}
 			empty = count <= 0;
 			return result;
+		}
+
+
+		/// <summary>
+		/// Returns element with highest value.
+		/// </summary>
+		/// <typeparam name="T">type of element</typeparam>
+		/// <param name="source">source collection.</param>
+		/// <param name="comparer">comparer to compare elements 
+		/// of <paramref name="source"/> collection.</param>
+		/// <exception cref="ArgumentNullException">
+		/// if <paramref name="source"/> is null.</exception>
+		/// <exception cref="InvalidOperationException">
+		/// if <paramref name="source"/> is empty.</exception>
+		public static T Max<T>(
+			this IEnumerable<T> source,
+			IComparer<T> comparer = null
+		){
+
+			if (source == null)
+				throw new ArgumentNullException("source");
+			if (comparer == null)
+				comparer = Comparer<T>.Default;
+			T result = source.First();
+			foreach (var element in source)
+			{
+				if ( 0 < comparer.Compare(element, result))
+					result = element;
+			}
+			return result;
+
+		}
+
+
+		/// <summary>
+		/// Returns element with highest value.
+		/// </summary>
+		/// <typeparam name="T">type of element</typeparam>
+		/// <param name="source">source collection.</param>
+		/// <param name="comparer">comparer to compare elements 
+		/// of <paramref name="source"/> collection.</param>
+		/// <exception cref="ArgumentNullException">
+		/// if <paramref name="source"/> or <param name="comparison"/> is null.
+		/// </exception>
+		/// <exception cref="InvalidOperationException">
+		/// if <paramref name="source"/> is empty.</exception>
+		public static T Max<T>(
+			this IEnumerable<T> source,
+			Comparison<T> comparison
+		){
+			return source.Max(Comparer<T>.Create(comparison));
 		}
 
 

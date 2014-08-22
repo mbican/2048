@@ -36,7 +36,11 @@ namespace _2048
 		/// <paramref name="b"/>. It will have the same result if you exchange
 		/// the values a and b.
 		/// </remarks>
-		public static bool NearlyEquals(this double a, double b, double epsilon = RELATIVE_EPSILON)
+		public static bool NearlyEquals(
+			this double a, 
+			double b, 
+			double epsilon = RELATIVE_EPSILON
+		)
 		{
 			if (a == b)
 			{ // shortcut, handles infinities
@@ -51,11 +55,11 @@ namespace _2048
 			{
 				// a or b is zero or both are extremely close to it
 				// relative error is less meaningful here
-				return diff < (epsilon * MIN_NORMAL);
+				return diff <= (epsilon * MIN_NORMAL);
 			}
 			else
 			{ // use relative error
-				return diff / (absA + absB) < epsilon / 2;
+				return diff / (absA + absB) <= epsilon / 2;
 			}
 		}
 	}

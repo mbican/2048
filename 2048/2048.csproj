@@ -82,6 +82,7 @@
     <Compile Include="AI\ANN\IANNGame.cs" />
     <Compile Include="AI\MCTS\ChildNode[T].cs" />
     <Compile Include="AI\MCTS\EMCTS.cs" />
+    <Compile Include="Extensions\ERandom.cs" />
     <Compile Include="AI\MCTS\GameNode.cs" />
     <Compile Include="AI\MCTS\INode[T].cs" />
     <Compile Include="AI\MCTS\MCTS_backup.cs" />

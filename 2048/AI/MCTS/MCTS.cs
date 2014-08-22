@@ -120,6 +120,12 @@ namespace _2048.AI.MCTS
 		}
 
 
+		public override string ToString()
+		{
+			return string.Format("#{0}^{1}@{2}",this._visits,this.score.Mean,this.Node.ToString());
+		}
+
+
 		private bool Execute(out double score)
 		{
 			score = 0;
