@@ -62,6 +62,12 @@ namespace _2048.AI.MCTS
 		}
 
 
+		public override string ToString()
+		{
+			return string.Format("{0} - {1}", this.A, this.B);
+		}
+
+
 		private double GetValue()
 		{
 			return this.ValueGetter(this.Middle);

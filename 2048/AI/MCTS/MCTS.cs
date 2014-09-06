@@ -27,6 +27,8 @@ namespace _2048.AI.MCTS
 		private readonly Statistics.StandardDeviationCounter score = 
 			new Statistics.StandardDeviationCounter();
 
+		private int parentsVisits;
+
 
 		[ThreadStatic]
 		private static Random random;
@@ -55,18 +57,24 @@ namespace _2048.AI.MCTS
 
 		public double GetBias(int parentsVisits)
 		{
+			this.parentsVisits = parentsVisits;
 			return Math.Pow(Math.Log(parentsVisits) / this._visits, biasExponent);
 		}
 
 
 		public double GetUct(int parentsVisits)
 		{
-				return this.WinRate * this.GetBias(parentsVisits);
+			this.parentsVisits = parentsVisits;
+			return this.WinRate * this.GetBias(parentsVisits);
 		}
 
 
 		public bool Complete { get { return this._complete; } }
 		private bool _complete;
+
+
+		private double Bias { get { return this.GetBias(this.parentsVisits); } }
+		private double Uct { get { return this.GetUct(this.parentsVisits); } }
 
 
 		public MCTS(T root, double biasExponent = 0.5)
@@ -80,11 +88,12 @@ namespace _2048.AI.MCTS
 
 		public void Execute(int visits)
 		{
-			/*
-			int score;
+			
+			double score;
 			while (this._visits < visits && !this.Complete)
 				this.Execute(out score);
-			 */
+			
+			/*
 			int threadId = 0;
 			Parallel.For(this._visits, visits,
 				() => {
@@ -101,7 +110,13 @@ namespace _2048.AI.MCTS
 					return dummy;
 				},
 				(dummy) => { }
-			);
+			);*/
+		}
+
+
+		public override string ToString()
+		{
+			return string.Format("^{0}#{1}:{2:F0}({3:F2}*{4:F0})", 0, this.Visits, this.Uct, this.Bias, this.WinRate);
 		}
 
 
@@ -125,38 +140,38 @@ namespace _2048.AI.MCTS
 			{
 				Interlocked.Increment(ref this._visits);
 				this.EnsureChildren();
-			}
-			if (0 < this._children.Count)
-			{
-				while (!result)
+				if (0 < this._children.Count)
 				{
-					int unvisited = 0;
-					double maxUct = double.MinValue;
-					MCTS<T> chosenChild = null;
-					foreach (var child in this._children)
+					while (!result)
 					{
-						if (!child.Complete)
+						int unvisited = 0;
+						double maxUct = double.MinValue;
+						MCTS<T> chosenChild = null;
+						foreach (var child in this._children)
 						{
-							if (child._visits == 0)
+							if (!child.Complete)
 							{
-								if (random.Next(unvisited++) == 0)
+								if (child._visits == 0)
+								{
+									if (random.Next(unvisited++) == 0)
+										chosenChild = child;
+								}
+								else if (unvisited == 0 && maxUct < child.GetUct(this._visits))
+								{
+									maxUct = child.GetUct(this._visits);
 									chosenChild = child;
-							}
-							else if (unvisited == 0 && maxUct < child.GetUct(this._visits))
-							{
-								maxUct = child.GetUct(this._visits);
-								chosenChild = child;
+								}
 							}
 						}
+						if (chosenChild == null)
+							break;
+						result = chosenChild.Execute(out score);
+						this.score.Add(score);
+						if (!result && !chosenChild.Complete)
+							throw new InvalidOperationException(
+								"Node didn't execute and Complete is false."
+							);
 					}
-					if (chosenChild == null)
-						break;
-					result = chosenChild.Execute(out score);
-					this.score.Add(score);
-					if (!result && !chosenChild.Complete)
-						throw new InvalidOperationException(
-							"Node didn't execute and Complete is false."
-						);
 				}
 			}
 			if (!result)

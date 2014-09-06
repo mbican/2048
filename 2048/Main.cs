@@ -33,11 +33,11 @@ namespace _2048
 				TimeSpan.FromSeconds(1),
 				() => new _2048Model(),
 				"_2048Model"
-			);
+			);*/
 			//Console.ReadLine();
-			*/
-			_2048MCTS(20000,1);
-			//SearchBias(200, 20);
+			
+			//_2048MCTS(20000,1);
+			SearchBias(100, 200);
 			Console.ReadLine();
 		}
 
@@ -137,7 +137,7 @@ namespace _2048
 			Console.Write(((_2048Model)root.Node.Game).Matrix.ToDebugString(5));
 		}
 
-		static void SearchBias(int visits, int _2048Visits, int k = 5)
+		static void SearchBias(int visits, int _2048Visits, int k = 10)
 		{
 			double c = Math.Pow(2, k);
 			var _lock = new Object();
