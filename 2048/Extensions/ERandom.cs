@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace _2048
 {
-	class ERandom
+	static class ERandom
 	{
 		/// <summary>
 		/// Generates pseudo random number with exponential distribution.

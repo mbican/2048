@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace _2048.AI.MCTS
 {
-	class GameNode : INode<double,GameNode>
+	class GameNode : INode<double, GameNode>
 	{
 		public readonly int ParentsMove;
 		public readonly IMCTSGame Game;
@@ -19,11 +19,17 @@ namespace _2048.AI.MCTS
 		private readonly Lazy<double> _value;
 
 
-		public IList<ChildNode<double,GameNode>> Children
+		public IList<ChildNode<double, GameNode>> Children
 		{
 			get { return this._children.Value; }
 		}
 		private readonly Lazy<IList<ChildNode<double, GameNode>>> _children;
+
+
+		public double AverageScoreCoeff
+		{
+			get { return this.Game.PlayersATurn ? -1 : 1; }
+		}
 
 
 		public GameNode(IMCTSGame game, int parentsMove = -1)
@@ -33,7 +39,8 @@ namespace _2048.AI.MCTS
 			this.ParentsMove = parentsMove;
 			this.Game = game;
 			this._value = new Lazy<double>(this.ComputeValue);
-			this._children = new Lazy<IList<ChildNode<double, GameNode>>>(this.CreateChildren);
+			this._children = 
+				new Lazy<IList<ChildNode<double, GameNode>>>(this.CreateChildren);
 		}
 
 

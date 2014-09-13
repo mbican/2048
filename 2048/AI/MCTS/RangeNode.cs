@@ -51,6 +51,9 @@ namespace _2048.AI.MCTS
 		public double Middle { get { return (this.A + this.B) / 2; } }
 
 
+		public double AverageScoreCoeff { get { return 1; } }
+
+
 		public RangeNode(double a, double b, Func<double,double> valueGetter)
 		{
 			if (valueGetter == null)

@@ -9,6 +9,7 @@ namespace _2048.AI.MCTS
 	interface INode<TValue, TNode> where TNode : INode<TValue,TNode>
 	{
 		TValue Value { get; }
+		double AverageScoreCoeff { get; }
 		IList<ChildNode<TValue,TNode>> Children { get; }
 	}
 }

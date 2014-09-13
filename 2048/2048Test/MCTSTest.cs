@@ -15,11 +15,12 @@ namespace _2048Test
 			var floor = 0.0;
 			var ceil = 10.0;
 			var biasExponent = 0;
+			var biasCoeff = 0;
 			for (var iterations = 1; iterations < 200; iterations++)
 			{
 				var bisect = new RangeNode(floor, ceil, (x) => ceil - floor - Math.Abs(x - expectedValue));
 				MCTS<RangeNode>.SetRandomSeed(0);
-				var root = MCTS.Create(bisect, biasExponent);
+				var root = MCTS.Create(bisect, biasCoeff, 1, biasExponent);
 				root.Execute(iterations, parallel: false);
 				Assert.AreEqual(iterations, root.Visits);
 				var actualValue = root.GetBestLeaf().Node.Middle;

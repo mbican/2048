@@ -85,7 +85,6 @@
     <Compile Include="Extensions\ERandom.cs" />
     <Compile Include="AI\MCTS\GameNode.cs" />
     <Compile Include="AI\MCTS\INode[T].cs" />
-    <Compile Include="AI\MCTS\MCTS_backup.cs" />
     <Compile Include="AI\MCTS\IMCTSGame.cs" />
     <Compile Include="AI\MCTS\MCTS.cs" />
     <Compile Include="AI\MCTS\RangeNode.cs" />
@@ -93,7 +92,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="2048Model_backup.cs" />
     <Compile Include="DesignPatterns\Disposable.cs" />
     <Compile Include="Extensions\EInteger.cs" />
     <Compile Include="Extensions\EDouble.cs" />

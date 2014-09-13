@@ -21,6 +21,7 @@ namespace _2048.AI.MCTS
 
 
 		private readonly double biasExponent;
+		private readonly double biasCoeff;
 		private readonly int skipLevels;
 
 
@@ -52,7 +53,7 @@ namespace _2048.AI.MCTS
 		private int _visits;
 
 
-		public double WinRate { get { return this.score.Mean; } }
+		public double WinRate { get { return this.score.Mean * this.Node.AverageScoreCoeff; } }
 
 
 		public double GetBias(int parentsVisits)
@@ -63,7 +64,7 @@ namespace _2048.AI.MCTS
 
 		public double GetUct(int parentsVisits)
 		{
-			return this.WinRate * this.GetBias(parentsVisits);
+			return this.WinRate + this.GetBias(parentsVisits) * biasCoeff;
 		}
 
 
@@ -71,13 +72,19 @@ namespace _2048.AI.MCTS
 		private bool _complete;
 
 
-		public MCTS(T root, double biasExponent = 0.5, int skipLevels = 1)
+		public MCTS(
+			T root,
+			double biasCoeff = 10,
+			int skipLevels = 1,
+			double biasExponent = 0.5
+		)
 		{ // random is ThreadStatic so we must initialize it
-		  // for each thread
+			// for each thread
 			if (random == null)
 				random = new Random();
 			this.Node = root;
 			this.biasExponent = biasExponent;
+			this.biasCoeff = biasCoeff;
 			this.skipLevels = skipLevels;
 			if (this.skipLevels <= 0)
 				this.skipLevelsHandled = true;
@@ -92,10 +99,10 @@ namespace _2048.AI.MCTS
 				Parallel.For(this._visits, visits,
 					() =>
 					{ // random is ThreadStatic so we must initialize it
-					  // for each thread
+						// for each thread
 						if (random == null)
 							random = new Random(
-								(int)DateTime.UtcNow.Ticks ^ 
+								(int)DateTime.UtcNow.Ticks ^
 									(Interlocked.Increment(ref threadId) * 251)
 							);
 						return 0;
@@ -122,7 +129,7 @@ namespace _2048.AI.MCTS
 
 		public override string ToString()
 		{
-			return string.Format("#{0}^{1}@{2}",this._visits,this.score.Mean,this.Node.ToString());
+			return string.Format("#{0}^{1}@{2}", this._visits, this.score.Mean, this.Node.ToString());
 		}
 
 
@@ -147,7 +154,7 @@ namespace _2048.AI.MCTS
 					Interlocked.Decrement(ref this._visits);
 			}
 			if (!result)
-				if ( Interlocked.CompareExchange(ref this._visits, 1, 0) == 0)
+				if (Interlocked.CompareExchange(ref this._visits, 1, 0) == 0)
 				{
 					result = true;
 					score = this.Node.Value;
@@ -245,7 +252,7 @@ namespace _2048.AI.MCTS
 							chosenChild = child;
 					}
 					else if (unvisited == 0 && maxUct <
-						((childUCT = child.GetUct(visits))) 
+						((childUCT = child.GetUct(visits)))
 					)
 					{
 						maxUct = childUCT;
@@ -291,7 +298,7 @@ namespace _2048.AI.MCTS
 							childrenSkipLevels--;
 						foreach (var child in this.Node.Children)
 						{
-							this._children.Add(new MCTS<T>(child.Node, this.biasExponent,childrenSkipLevels));
+							this._children.Add(new MCTS<T>(child.Node, this.biasCoeff, childrenSkipLevels, this.biasExponent));
 						}
 						this.childrenCreated = true;
 					}
@@ -312,12 +319,13 @@ namespace _2048.AI.MCTS
 	class MCTS
 	{
 		public static MCTS<T> Create<T>(
-			T root, 
-			double biasExponent = 0.5, 
-			int skipLevels = 1
-		) where T : INode<double,T>
+			T root,
+			double biasCoeff = 10,
+			int skipLevels = 1,
+			double biasExponent = 0.5
+		) where T : INode<double, T>
 		{
-			return new MCTS<T>(root, biasExponent, skipLevels);
+			return new MCTS<T>(root, biasCoeff, skipLevels, biasExponent);
 		}
 	}
 }
